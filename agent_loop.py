@@ -423,8 +423,64 @@ class AgentRunner:
                 sim_time = sim_time + timedelta(hours=2)
 
             # ---------------------------------------------------------
-            # STEP 6: OBSERVE OUTCOME
+            # STEP 6: OBSERVE OUTCOME & MULTI-TURN REACTION
             # ---------------------------------------------------------
+            # Check for customer reply / interaction outcome
+            reply_ctx = {
+                "customer_reply": getattr(event, "customer_reply", None),
+                "ptp_date": getattr(event, "ptp_date", None)
+            }
+            customer_reply = tools.check_customer_reply(case.case_id, context=reply_ctx) if not case.is_control_group else None
+
+            if customer_reply:
+                # Outcome awareness: analyze customer response intent
+                ptp_analysis = tools.extract_ptp_intent(customer_reply)
+                log_step(AuditStep.OBSERVE_OUTCOME, {
+                    "outcome": "CUSTOMER_REPLIED",
+                    "customer_reply": customer_reply,
+                    "intent_analysis": ptp_analysis,
+                }, sim_time)
+
+                intent = ptp_analysis.get("intent", "none")
+                if intent == "promise_to_pay":
+                    ptp_date = ptp_analysis.get("date", (sim_time + timedelta(days=1)).strftime("%Y-%m-%d"))
+                    ptp_res = tools.schedule_ptp(case.case_id, ptp_date)
+                    case.current_state = CaseState.SCHEDULED
+                    case.previous_attempts.append({
+                        "attempt": case.current_attempt,
+                        "tool": "schedule_ptp",
+                        "status": "PTP_SCHEDULED",
+                        "ptp_date": ptp_date,
+                        "customer_reply": customer_reply,
+                    })
+                    log_step(AuditStep.ACT, {
+                        "approved_tool": "schedule_ptp",
+                        "ptp_details": ptp_res,
+                        "reasoning": f"Customer promised to pay on {ptp_date} ('{customer_reply}'). Halting immediate aggressive retries to preserve customer goodwill."
+                    }, sim_time)
+                    log_step(AuditStep.CLOSE, {
+                        "status": "PTP_HOLD",
+                        "ptp_date": ptp_date,
+                        "summary": "Case placed on Promise-to-Pay hold until promised payment date."
+                    }, sim_time)
+                    break
+                elif intent == "opt_out":
+                    case.current_state = CaseState.TERMINATED
+                    tools.close_case(case.case_id, "TERMINATED", 0.0)
+                    log_step(AuditStep.CLOSE, {
+                        "status": "TERMINATED",
+                        "reason": f"Customer opted out in reply: '{customer_reply}'"
+                    }, sim_time)
+                    break
+                elif intent == "dispute":
+                    case.current_state = CaseState.ESCALATED
+                    tools.escalate_to_human(case.case_id, f"Customer dispute in reply: '{customer_reply}'")
+                    log_step(AuditStep.ESCALATE, {
+                        "reason": f"Transaction disputed in reply: '{customer_reply}'"
+                    }, sim_time)
+                    break
+
+            # Check payment gateway resolution status
             is_resolved = outcome.resolved if outcome else False
 
             if is_resolved:
@@ -451,8 +507,9 @@ class AgentRunner:
                 else:
                     log_step(AuditStep.OBSERVE_OUTCOME, {
                         "outcome": "UNRESOLVED",
+                        "customer_reply": None,
                         "attempts_used": case.current_attempt,
-                        "action": "Proceeding to next retry iteration in bounded loop.",
+                        "action": "Proceeding to next retry iteration in multi-turn bounded loop.",
                     }, sim_time)
 
         return case

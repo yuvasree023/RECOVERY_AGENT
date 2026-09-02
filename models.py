@@ -52,6 +52,7 @@ class EventRecord:
     fraud_score: float
     retry_cooldown_hours: int
     ptp_date: Optional[str] = None
+    customer_reply: Optional[str] = None
 
 
 @dataclass

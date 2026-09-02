@@ -123,20 +123,22 @@ def validate_plan_schema(data: Any) -> Tuple[bool, Optional[str], Optional[Dict[
 
 
 class MockLLM:
-    """Deterministic Mock LLM implementing rule-based heuristics & replan logic."""
+    """Deterministic Mock LLM implementing dynamic probability & LTV synthesis and replan logic."""
 
     def reason_and_plan(
         self,
         observation: Dict[str, Any],
-        previous_rejections: Optional[str] = None
+        previous_rejections: Optional[Any] = None
     ) -> Tuple[str, Dict[str, Any]]:
-        """Generates a deterministic plan and reasoning for offline/reproducible execution."""
+        """Generates a dynamic plan and Chain-of-Thought synthesizing probability, LTV, and history."""
         decline_code = observation.get("decline_code", "UNKNOWN")
         segment = observation.get("segment", "Medium")
-        whatsapp_consent = observation.get("whatsapp_consent", False)
+        ltv = float(observation.get("ltv", 0.0))
+        whatsapp_consent = bool(observation.get("whatsapp_consent", False))
         event_type = observation.get("event_type", "UPI_PAYMENT_FAIL")
-        attempt = int(observation.get("attempt_number", 1))
+        attempt = int(observation.get("current_attempt", observation.get("attempt_number", 0)))
         rec_prob = float(observation.get("recovery_probability", 0.5))
+        prev_attempts = observation.get("previous_attempts", [])
 
         # Handle Replan loop if previous proposal was vetoed by guardrails
         if previous_rejections:
@@ -144,7 +146,7 @@ class MockLLM:
             if any(k in err_upper for k in ["DND", "WINDOW", "CONSENT", "COOLDOWN", "RULE 5", "RULE 6"]):
                 reasoning = (
                     f"GUARDRAIL INTERCEPTION: Previous action blocked due to '{previous_rejections}'. "
-                    f"REPLANNING: Switching channel to Email (24/7 compliant, unaffected by telecom DND curfew) "
+                    f"DYNAMIC REPLANNING: Switching channel to Email (24/7 compliant, unaffected by telecom DND curfew) "
                     f"to ensure non-intrusive payment recovery."
                 )
                 plan = {
@@ -161,7 +163,7 @@ class MockLLM:
             else:
                 reasoning = (
                     f"GUARDRAIL INTERCEPTION: Previous plan blocked due to '{previous_rejections}'. "
-                    f"REPLANNING: Escalating case to human customer support specialist."
+                    f"DYNAMIC REPLANNING: Escalating case to human customer support specialist."
                 )
                 plan = {
                     "tool": "send_message",
@@ -175,90 +177,94 @@ class MockLLM:
                 }
                 return reasoning, plan
 
-        # Standard deterministic heuristic
-        if decline_code == "NETWORK_TIMEOUT":
-            channel = "WhatsApp" if segment == "High" and whatsapp_consent else "SMS"
-            reasoning = (
-                f"Customer experienced a transient network glitch ({decline_code}). "
-                f"ML Model estimates recovery probability is {rec_prob:.1%}. "
-                f"Scheduling an automated gateway retry post-cooldown, paired with a reassuring {channel} notification."
-            )
-            plan = {
-                "tool": "schedule_retry",
-                "channel": channel,
-                "template_key": "PAYMENT_RETRY",
-                "discount_pct": 0.0,
-                "action_type": "SCHEDULE_RETRY",
-                "reasoning": reasoning,
-                "_engine_mode": "mock",
-                "_raw_response": None,
-            }
-        elif decline_code == "HIGH_SHIPPING_COST" or (event_type == "CART_ABANDON" and attempt >= 2):
-            channel = "WhatsApp" if segment == "High" and whatsapp_consent else ("Email" if segment == "Medium" else "SMS")
-            reasoning = (
-                f"Checkout drop-off friction detected. "
-                f"Passive reminders yield low conversion ({rec_prob:.1%}). "
-                f"Offering an approved 10% discount coupon via {channel} to recover this cart abandonment."
-            )
-            plan = {
-                "tool": "offer_discount",
-                "channel": channel,
-                "template_key": "CART_DISCOUNT",
-                "discount_pct": 10.0,
-                "action_type": "OFFER_DISCOUNT",
-                "reasoning": reasoning,
-                "_engine_mode": "mock",
-                "_raw_response": None,
-            }
-        elif decline_code == "CARD_EXPIRED":
-            reasoning = (
-                f"The customer's payment card has expired. Standard automated retries will fail. "
-                f"Prompting the customer with a secure payment instrument update link via Email."
-            )
-            plan = {
-                "tool": "send_message",
-                "channel": "Email",
-                "template_key": "CARD_EXPIRED",
-                "discount_pct": 0.0,
-                "action_type": "SEND_MESSAGE",
-                "reasoning": reasoning,
-                "_engine_mode": "mock",
-                "_raw_response": None,
-            }
-        elif decline_code == "INSUFFICIENT_FUNDS":
-            channel = "SMS" if segment == "Low" else ("WhatsApp" if (segment == "High" and whatsapp_consent) else "Email")
-            reasoning = (
-                f"Customer account has insufficient funds. "
-                f"Recovery probability is {rec_prob:.1%}. "
-                f"Scheduling a delayed retry window and dispatching a payment reminder via {channel}."
-            )
-            plan = {
-                "tool": "schedule_retry",
-                "channel": channel,
-                "template_key": "INSUFFICIENT_FUNDS",
-                "discount_pct": 0.0,
-                "action_type": "SCHEDULE_RETRY",
-                "reasoning": reasoning,
-                "_engine_mode": "mock",
-                "_raw_response": None,
-            }
-        else:
-            reasoning = (
-                f"Detected event '{event_type}' with status code '{decline_code}'. "
-                f"ML recovery likelihood is {rec_prob:.1%}. "
-                f"Proposing general transaction retry and payment recovery link via Email."
-            )
-            plan = {
-                "tool": "send_message",
-                "channel": "Email",
-                "template_key": "PAYMENT_RETRY",
-                "discount_pct": 0.0,
-                "action_type": "SEND_MESSAGE",
-                "reasoning": reasoning,
-                "_engine_mode": "mock",
-                "_raw_response": None,
-            }
+        # Dynamic Strategy Synthesis (Probability + LTV + Segment + Attempt History)
+        # 1. Low Recovery Likelihood (< 0.3) -> Lean towards Discount Incentive or Escalation
+        if rec_prob < 0.3:
+            if ltv >= 5000 and attempt >= 2:
+                channel = "Email"
+                tool = "send_message"
+                action_type = "SEND_MESSAGE"
+                template_key = "PAYMENT_RETRY"
+                discount_pct = 0.0
+                reasoning = (
+                    f"Low recovery likelihood ({rec_prob:.1%}) for high-value customer (LTV: ₹{ltv:,.2f}, Segment: {segment}). "
+                    f"Prior automated attempts ({len(prev_attempts)}) did not convert. "
+                    f"Synthesizing strategy: escalating to VIP human ops desk to prevent customer churn."
+                )
+            else:
+                channel = "WhatsApp" if (segment == "High" and whatsapp_consent) else ("Email" if segment == "Medium" else "SMS")
+                tool = "offer_discount"
+                action_type = "OFFER_DISCOUNT"
+                template_key = "CART_DISCOUNT" if "CART" in event_type else "PAYMENT_RETRY"
+                discount_pct = 10.0
+                reasoning = (
+                    f"Low ML recovery probability ({rec_prob:.1%}) detected on {event_type} ({decline_code}, LTV: ₹{ltv:,.2f}). "
+                    f"Standard passive reminders have low conversion elasticity. "
+                    f"Proposing 10% incentive coupon via {channel} to overcome friction."
+                )
 
+        # 2. High Recovery Likelihood (> 0.7) -> Immediate automated cooldown retry
+        elif rec_prob > 0.7:
+            channel = "WhatsApp" if (segment == "High" and whatsapp_consent) else "SMS"
+            tool = "schedule_retry"
+            action_type = "SCHEDULE_RETRY"
+            template_key = "PAYMENT_RETRY"
+            discount_pct = 0.0
+            reasoning = (
+                f"High ML recovery likelihood ({rec_prob:.1%}) for {segment} segment customer (LTV: ₹{ltv:,.2f}). "
+                f"Diagnosed transient issue ({decline_code}); scheduling immediate cooldown gateway retry with reassuring {channel} alert."
+            )
+
+        # 3. Moderate Likelihood (0.3 <= prob <= 0.7) -> Targeted notification & instrument update
+        else:
+            channel = "WhatsApp" if (segment == "High" and whatsapp_consent) else ("SMS" if segment == "Low" else "Email")
+            if decline_code == "CARD_EXPIRED":
+                tool = "send_message"
+                action_type = "SEND_MESSAGE"
+                template_key = "CARD_EXPIRED"
+                discount_pct = 0.0
+                reasoning = (
+                    f"Customer card expired with moderate recovery likelihood ({rec_prob:.1%}). "
+                    f"Automated retries will bounce. Sending secure card update link via {channel}."
+                )
+            elif decline_code == "INSUFFICIENT_FUNDS":
+                tool = "schedule_retry"
+                action_type = "SCHEDULE_RETRY"
+                template_key = "INSUFFICIENT_FUNDS"
+                discount_pct = 0.0
+                reasoning = (
+                    f"Insufficient balance diagnosed (ML score: {rec_prob:.1%}). "
+                    f"Scheduling delayed retry window paired with discreet balance notification via {channel}."
+                )
+            elif "CART" in event_type or decline_code == "HIGH_SHIPPING_COST":
+                tool = "offer_discount" if attempt >= 1 else "send_message"
+                action_type = "OFFER_DISCOUNT" if attempt >= 1 else "SEND_MESSAGE"
+                template_key = "CART_DISCOUNT" if attempt >= 1 else "CART_REMINDER"
+                discount_pct = 10.0 if attempt >= 1 else 0.0
+                reasoning = (
+                    f"Moderate recovery likelihood ({rec_prob:.1%}) on checkout drop-off (Attempt #{attempt + 1}). "
+                    f"Dispatching targeted {channel} reminder{' with 10% discount incentive' if discount_pct > 0 else ''}."
+                )
+            else:
+                tool = "send_message"
+                action_type = "SEND_MESSAGE"
+                template_key = "PAYMENT_RETRY"
+                discount_pct = 0.0
+                reasoning = (
+                    f"Event '{event_type}' ({decline_code}) with recovery probability {rec_prob:.1%}. "
+                    f"Proposing instant payment recovery link via {channel}."
+                )
+
+        plan = {
+            "tool": tool,
+            "channel": channel,
+            "template_key": template_key,
+            "discount_pct": discount_pct,
+            "action_type": action_type,
+            "reasoning": reasoning,
+            "_engine_mode": "mock",
+            "_raw_response": None,
+        }
         return reasoning, plan
 
 

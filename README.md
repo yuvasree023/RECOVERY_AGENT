@@ -142,10 +142,11 @@ All 7 safety and compliance rules are implemented in an **isolated module with z
 
 | Decision Point | Enforcement Method | Architectural Rationale |
 |---|---|---|
+| **Strategy Formulation** | **Dynamic Multi-Factor Synthesis (`LLMEngine` / `MockLLM`)** | LLM dynamically synthesizes customer LTV, ML recovery probability, failure diagnosis, and prior attempt history to formulate a multi-step strategy, rather than picking from a fixed menu. If probability < 0.3, it leans towards discount incentives or VIP escalation; if > 0.7, it executes immediate automated cooldown retries. |
+| **Outcome Adaptation** | **Outcome-Driven Re-planning & PTP Hold** | Agent actively checks for customer replies (e.g., Hinglish Promise-To-Pay: *"Kal salary aayegi tab pay karunga"*) and adapts its workflow, scheduling a PTP hold and halting active retries to prevent customer spam and protect goodwill. |
+| **Adaptive Re-planning** | **Autonomous Feedback Loop** | If guardrails veto a proposed channel/action (`BLOCK_ACT`, e.g. DND curfew), the LLM receives rejection feedback to autonomously pivot (e.g. to Email) without human intervention. |
 | **Decline Code → Root Cause** | Deterministic Mapping | Fixed 4-code vocabulary, deterministic diagnosis mapping, zero hallucination risk. |
 | **Recovery Probability** | `scikit-learn LogisticRegression` ML Scorer | Learns multivariate likelihood from customer LTV, attempt count, segment, and failure history. |
-| **Tool & Channel Selection** | **LLM-Assisted Reasoning (`LLMEngine` / `MockLLM`)** | Autonomous Chain-of-Thought (CoT) selects tool (`send_message`, `schedule_retry`, `offer_discount`), channel (`WhatsApp`, `SMS`, `Email`), and template key (`PAYMENT_RETRY`, `CARD_EXPIRED`, `INSUFFICIENT_FUNDS`, `CART_DISCOUNT`, `CART_REMINDER`), bounded by strict schema enums and prior attempt memory. |
-| **Adaptive Re-planning** | **Autonomous Feedback Loop** | If guardrails veto a proposed channel/action (`BLOCK_ACT`, e.g. DND curfew), the LLM receives rejection feedback to autonomously pivot (e.g. to Email) without human intervention. |
 | **Discount & Commitments** | **Strict Schema Bounds (0%, 10%, 15%)** | The LLM may only select pre-approved discount percentages. Arbitrary financial promises are rejected at schema validation and fall back to safe defaults. |
 | **Message Content** | **Fixed Template Slot-Filling Only** | Zero free-form generative customer text. Rendering is strictly parameter interpolation into pre-approved templates (`render_message_body`), eliminating regulatory and tone drift. |
 | **Safety Guardrails** | **7 Hard-Coded Fail-Closed Rules** | Safety-critical; isolated module (`guardrails.py`), 100% unit-tested independently of LLM and framework. |
