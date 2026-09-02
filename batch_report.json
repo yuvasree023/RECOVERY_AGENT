@@ -1,0 +1,69 @@
+{
+  "batch_summary": {
+    "total_events_processed": 223,
+    "treatment_cases_count": 178,
+    "control_cases_count": 45,
+    "treatment_resolution_rate": 0.236,
+    "control_resolution_rate": 0.3111,
+    "incremental_lift_percentage_points": -7.52,
+    "gross_recovered_amount": 106490.0,
+    "total_cost_incurred": 59.9,
+    "net_recovered_amount": 106430.1,
+    "roi_multiple": 1776.8,
+    "compliance_violations_count": 0,
+    "escalation_rate": 0.0,
+    "termination_rate": 0.764
+  },
+  "breakdown_by_decline_code": {
+    "HIGH_SHIPPING_COST": {
+      "total": 48,
+      "resolved": 8,
+      "recovered": 27439.0,
+      "cost": 20.5,
+      "resolution_rate": 0.1667,
+      "net_recovered": 27418.5
+    },
+    "CARD_EXPIRED": {
+      "total": 47,
+      "resolved": 7,
+      "recovered": 17400.0,
+      "cost": 6.35,
+      "resolution_rate": 0.1489,
+      "net_recovered": 17393.65
+    },
+    "INSUFFICIENT_FUNDS": {
+      "total": 42,
+      "resolved": 9,
+      "recovered": 19492.0,
+      "cost": 16.85,
+      "resolution_rate": 0.2143,
+      "net_recovered": 19475.15
+    },
+    "NETWORK_TIMEOUT": {
+      "total": 41,
+      "resolved": 18,
+      "recovered": 42159.0,
+      "cost": 16.2,
+      "resolution_rate": 0.439,
+      "net_recovered": 42142.8
+    }
+  },
+  "breakdown_by_playbook": {
+    "Payment Failure Recovery (UPI/SUB)": {
+      "total": 118,
+      "resolved": 21,
+      "recovered": 50275.0,
+      "cost": 41.1,
+      "resolution_rate": 0.178,
+      "net_recovered": 50233.9
+    },
+    "Checkout Drop-off Recovery (CART)": {
+      "total": 60,
+      "resolved": 21,
+      "recovered": 56215.0,
+      "cost": 18.8,
+      "resolution_rate": 0.35,
+      "net_recovered": 56196.2
+    }
+  }
+}

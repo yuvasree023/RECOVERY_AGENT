@@ -1,0 +1,4 @@
+channel,cost_per_send,avg_response_time_hours,dnd_start,dnd_end
+WhatsApp,0.35,2,21:00,08:00
+SMS,0.15,4,21:00,08:00
+Email,0.05,12,,

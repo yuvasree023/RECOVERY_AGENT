@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recover — AI Revenue Recovery Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <!-- Navigation Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo-badge">
+        <span class="logo-icon">⚡</span>
+        <div class="logo-text">
+          <span class="brand-title">RECOVER</span>
+          <span class="brand-subtitle">AI Revenue Recovery Engine</span>
+        </div>
+      </div>
+      <span class="badge track-badge">Razorpay AI Buildathon</span>
+    </div>
+
+    <div class="header-center">
+      <nav class="nav-tabs">
+        <button class="nav-tab active" data-tab="overview">Dashboard</button>
+        <button class="nav-tab" data-tab="cases">Case Explorer</button>
+        <button class="nav-tab" data-tab="simulation">Batch Replay</button>
+        <button class="nav-tab" data-tab="simulator">Webhook Simulator</button>
+        <button class="nav-tab" data-tab="ai-matrix">AI Judgment & Guardrails</button>
+      </nav>
+    </div>
+
+    <div class="header-right">
+      <div class="engine-status">
+        <span class="status-dot pulse"></span>
+        <span class="status-label">Engine Online</span>
+      </div>
+      <button class="btn btn-primary btn-sm" id="btn-run-batch-top">
+        <span>▶</span> Run Batch Replay
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-container">
+    
+    <!-- TAB 1: OVERVIEW -->
+    <section id="tab-overview" class="tab-content active">
+      <!-- KPI Cards Grid -->
+      <div class="kpi-grid">
+        <div class="kpi-card glass highlight">
+          <div class="kpi-header">
+            <span class="kpi-title">NET REVENUE RECOVERED</span>
+            <span class="kpi-icon">💰</span>
+          </div>
+          <div class="kpi-value" id="kpi-net-recovered">₹1,20,603.30</div>
+          <div class="kpi-footer text-success">
+            <span>↑ Gross: <strong id="kpi-gross-recovered">₹1,20,669.00</strong></span>
+            <span class="tag-cost">Cost: ₹65.70</span>
+          </div>
+        </div>
+
+        <div class="kpi-card glass">
+          <div class="kpi-header">
+            <span class="kpi-title">INCREMENTAL LIFT</span>
+            <span class="kpi-icon">📈</span>
+          </div>
+          <div class="kpi-value text-accent" id="kpi-incremental-lift">+9.19%</div>
+          <div class="kpi-footer">
+            <span>Treatment: <strong>26.97%</strong> vs Control: <strong>17.78%</strong></span>
+          </div>
+        </div>
+
+        <div class="kpi-card glass">
+          <div class="kpi-header">
+            <span class="kpi-title">RECOVERY ROI</span>
+            <span class="kpi-icon">🚀</span>
+          </div>
+          <div class="kpi-value text-purple" id="kpi-roi-multiple">1,835.7x</div>
+          <div class="kpi-footer">
+            <span>₹1,835 net yield per ₹1 spent</span>
+          </div>
+        </div>
+
+        <div class="kpi-card glass">
+          <div class="kpi-header">
+            <span class="kpi-title">GUARDRAIL INTEGRITY</span>
+            <span class="kpi-icon">🛡️</span>
+          </div>
+          <div class="kpi-value text-emerald" id="kpi-compliance">100%</div>
+          <div class="kpi-footer text-emerald">
+            <span>0 Compliance Violations across 223 events</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Playbook Performance & Root Cause Breakdown -->
+      <div class="dashboard-split">
+        <div class="panel glass">
+          <div class="panel-header">
+            <h3>Playbook Performance (Bounded Workflows)</h3>
+            <span class="panel-badge">2 Active Playbooks</span>
+          </div>
+          <div class="playbook-list">
+            <div class="playbook-item">
+              <div class="playbook-item-header">
+                <div class="playbook-name">
+                  <span class="pb-tag pb-payment">UPI / Card</span>
+                  <strong>Payment Failure Recovery</strong>
+                </div>
+                <span class="pb-recovered">₹62,732.95 Net</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill fill-blue" style="width: 25.0%;"></div>
+              </div>
+              <div class="playbook-item-footer">
+                <span>112 Cases Processed</span>
+                <span>28 Resolved (25.0% rate)</span>
+                <span>Cost: ₹41.05</span>
+              </div>
+            </div>
+
+            <div class="playbook-item">
+              <div class="playbook-item-header">
+                <div class="playbook-name">
+                  <span class="pb-tag pb-cart">Cart Abandon</span>
+                  <strong>Checkout Drop-off Recovery</strong>
+                </div>
+                <span class="pb-recovered">₹57,870.35 Net</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill fill-purple" style="width: 30.3%;"></div>
+              </div>
+              <div class="playbook-item-footer">
+                <span>66 Cases Processed</span>
+                <span>20 Resolved (30.3% rate)</span>
+                <span>Cost: ₹24.65</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel glass">
+          <div class="panel-header">
+            <h3>Decline Code Diagnosis & Resolution</h3>
+            <span class="panel-badge">Deterministic Mapping</span>
+          </div>
+          <div class="decline-grid">
+            <div class="decline-stat-card">
+              <div class="decline-code-tag">NETWORK_TIMEOUT</div>
+              <div class="decline-res-rate">57.5%</div>
+              <div class="decline-desc">23 / 40 Resolved • ₹50,602.55 Net</div>
+            </div>
+            <div class="decline-stat-card">
+              <div class="decline-code-tag">INSUFFICIENT_FUNDS</div>
+              <div class="decline-res-rate">26.7%</div>
+              <div class="decline-desc">12 / 45 Resolved • ₹33,614.75 Net</div>
+            </div>
+            <div class="decline-stat-card">
+              <div class="decline-code-tag">HIGH_SHIPPING_COST</div>
+              <div class="decline-res-rate">15.7%</div>
+              <div class="decline-desc">8 / 51 Resolved • ₹24,996.95 Net</div>
+            </div>
+            <div class="decline-stat-card">
+              <div class="decline-code-tag">CARD_EXPIRED</div>
+              <div class="decline-res-rate">11.9%</div>
+              <div class="decline-desc">5 / 42 Resolved • ₹11,389.05 Net</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: CASE EXPLORER -->
+    <section id="tab-cases" class="tab-content">
+      <div class="panel glass">
+        <div class="panel-header table-controls">
+          <div class="search-box">
+            <input type="text" id="case-search" placeholder="Search by Case ID, Event ID, or Customer ID...">
+          </div>
+          <div class="filter-group">
+            <select id="filter-state" class="select-input">
+              <option value="ALL">All States</option>
+              <option value="RESOLVED">Resolved</option>
+              <option value="TERMINATED">Terminated</option>
+              <option value="EXECUTED">Executed</option>
+              <option value="ESCALATED">Escalated</option>
+            </select>
+            <select id="filter-playbook" class="select-input">
+              <option value="ALL">All Playbooks</option>
+              <option value="UPI_PAYMENT_FAIL">UPI Payment Fail</option>
+              <option value="CART_ABANDON">Cart Abandon</option>
+              <option value="SUBSCRIPTION_FAIL">Subscription Fail</option>
+            </select>
+            <button class="btn btn-secondary btn-sm" id="btn-refresh-cases">↻ Refresh</button>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Case / Event ID</th>
+                <th>Customer</th>
+                <th>Playbook</th>
+                <th>Decline Code</th>
+                <th>Amount</th>
+                <th>State</th>
+                <th>Recovery Prob</th>
+                <th>Recovered</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="cases-table-body">
+              <tr><td colspan="9" class="text-center py-4">Loading cases...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: BATCH REPLAY -->
+    <section id="tab-simulation" class="tab-content">
+      <div class="dashboard-split">
+        <div class="panel glass simulation-config">
+          <div class="panel-header">
+            <h3>Batch Simulation Controls</h3>
+          </div>
+          <div class="config-body">
+            <p class="config-desc">
+              Executes a full chronological replay across all 223 events with randomized control group isolation to measure incremental revenue recovery.
+            </p>
+            <div class="form-group">
+              <label>Control Group Size (%)</label>
+              <div class="slider-wrapper">
+                <input type="range" id="sim-control-pct" min="0" max="50" value="20" step="5">
+                <span id="sim-control-val">20% (A/B Baseline)</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Random Seed (Reproducibility)</label>
+              <input type="number" id="sim-seed" class="text-input" value="42">
+            </div>
+            <button class="btn btn-primary btn-block" id="btn-run-full-simulation">
+              ▶ Run Full Batch Simulation
+            </button>
+          </div>
+        </div>
+
+        <div class="panel glass simulation-results">
+          <div class="panel-header">
+            <h3>Simulation Output & Verification</h3>
+            <span class="badge" id="sim-status-badge">Ready</span>
+          </div>
+          <div id="sim-output-content" class="sim-terminal">
+            <div class="code-line text-muted">Click "Run Full Batch Simulation" to start chronological replay...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: WEBHOOK SIMULATOR -->
+    <section id="tab-simulator" class="tab-content">
+      <div class="dashboard-split">
+        <div class="panel glass">
+          <div class="panel-header">
+            <h3>Simulate Incoming Webhook</h3>
+          </div>
+          <form id="webhook-sim-form" class="form-body">
+            <div class="form-group">
+              <label>Webhook Event Type</label>
+              <select id="wh-event-type" class="select-input">
+                <option value="payment-failed">Payment Failed (UPI_PAYMENT_FAIL)</option>
+                <option value="cart-abandoned">Cart Abandoned (CART_ABANDON)</option>
+                <option value="subscription-failed">Subscription Failed (SUBSCRIPTION_FAIL)</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-group col">
+                <label>Amount (₹)</label>
+                <input type="number" id="wh-amount" class="text-input" value="3499.00">
+              </div>
+              <div class="form-group col">
+                <label>Customer Segment</label>
+                <select id="wh-customer-id" class="select-input">
+                  <option value="CUST_004">CUST_004 (High LTV, WhatsApp Consent)</option>
+                  <option value="CUST_008">CUST_008 (Medium LTV, WhatsApp Consent)</option>
+                  <option value="CUST_005">CUST_005 (Low LTV, SMS Only)</option>
+                  <option value="CUST_001">CUST_001 (OPT-OUT Customer — Rule 1 Test)</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group col">
+                <label>Decline Code</label>
+                <select id="wh-decline-code" class="select-input">
+                  <option value="NETWORK_TIMEOUT">NETWORK_TIMEOUT (Technical Glitch)</option>
+                  <option value="INSUFFICIENT_FUNDS">INSUFFICIENT_FUNDS (Cash Flow)</option>
+                  <option value="CARD_EXPIRED">CARD_EXPIRED (Instrument Update)</option>
+                  <option value="HIGH_SHIPPING_COST">HIGH_SHIPPING_COST (Friction/Discount)</option>
+                </select>
+              </div>
+              <div class="form-group col">
+                <label>Fraud Score (0.0 - 1.0)</label>
+                <input type="number" id="wh-fraud-score" class="text-input" step="0.05" min="0" max="1" value="0.15">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-accent btn-block">🚀 Ingest Webhook & Trigger Agent Loop</button>
+          </form>
+        </div>
+
+        <div class="panel glass">
+          <div class="panel-header">
+            <h3>Live Agent Loop Execution</h3>
+          </div>
+          <div id="wh-live-result" class="live-agent-feed">
+            <div class="empty-state">Trigger a webhook on the left to watch the agent observe, reason, guardrail check, and act in real-time.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: AI JUDGMENT & GUARDRAILS -->
+    <section id="tab-ai-matrix" class="tab-content">
+      <div class="panel glass mb-4">
+        <div class="panel-header">
+          <h3>AI Judgment Matrix (Strict Engineering Boundary)</h3>
+          <span class="panel-badge">Compliance Locked</span>
+        </div>
+        <table class="data-table matrix-table">
+          <thead>
+            <tr>
+              <th>Decision Point</th>
+              <th>Enforcement Method</th>
+              <th>Architectural Rationale</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Decline Code → Root Cause</strong></td>
+              <td><span class="badge badge-deterministic">Deterministic Dict Lookup</span></td>
+              <td>Fixed 4-code vocabulary, zero ambiguity, zero hallucination risk.</td>
+            </tr>
+            <tr>
+              <td><strong>Recovery Probability</strong></td>
+              <td><span class="badge badge-ml">Scikit-Learn LogisticRegression</span></td>
+              <td>Learns multivariate patterns across LTV, prior attempts, and decline history. Time-split validated.</td>
+            </tr>
+            <tr>
+              <td><strong>Channel & Tool Selection</strong></td>
+              <td><span class="badge badge-llm">LLM ReAct (LLMEngine / MockLLM)</span></td>
+              <td>Autonomous CoT selects tool, channel, and template bounded by strict schema enums, ML score, and retry memory.</td>
+            </tr>
+            <tr>
+              <td><strong>Adaptive Re-planning</strong></td>
+              <td><span class="badge badge-llm">Autonomous Replan Loop</span></td>
+              <td>When guardrail vetoes a plan (BLOCK_ACT), the LLM receives rejection feedback and dynamically pivots (e.g. to Email).</td>
+            </tr>
+            <tr>
+              <td><strong>Timing & DND Compliance</strong></td>
+              <td><span class="badge badge-deterministic">Deterministic Cooldown + DND Shift</span></td>
+              <td>Automatically shifts actions landing in 21:00-08:00 to 08:00 AM next morning.</td>
+            </tr>
+            <tr>
+              <td><strong>Discount & Commitments</strong></td>
+              <td><span class="badge badge-deterministic">Strict Schema Bounds (0/10/15%)</span></td>
+              <td>Only pre-approved discounts permitted. Arbitrary financial promises are rejected at schema validation.</td>
+            </tr>
+            <tr>
+              <td><strong>Message Content</strong></td>
+              <td><span class="badge badge-deterministic">Fixed Template Slot-Filling Only</span></td>
+              <td>Zero free-form generative customer text. Eliminates regulatory, compliance, and tone drift.</td>
+            </tr>
+            <tr>
+              <td><strong>Safety Guardrails</strong></td>
+              <td><span class="badge badge-guardrail">7 Hard-Coded Fail-Closed Rules</span></td>
+              <td>Safety-critical; isolated module, 100% unit-tested independently of DB/FastAPI.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="panel glass">
+        <div class="panel-header">
+          <h3>The 7 Safety Guardrails (`guardrails.py`)</h3>
+        </div>
+        <div class="guardrail-list">
+          <div class="guardrail-card">
+            <span class="g-num">Rule 1</span>
+            <div class="g-info">
+              <strong>Opt-Out Protection</strong>
+              <p><code>customer.opt_out_status == True</code> → Immediate TERMINATE, 0 contacts dispatched.</p>
+            </div>
+          </div>
+          <div class="guardrail-card">
+            <span class="g-num">Rule 2</span>
+            <div class="g-info">
+              <strong>Fraud Risk Threshold</strong>
+              <p><code>event.fraud_score > 0.8</code> → Immediate TERMINATE & flags for manual review (EVT_1005 test).</p>
+            </div>
+          </div>
+          <div class="guardrail-card">
+            <span class="g-num">Rule 3</span>
+            <div class="g-info">
+              <strong>Contact Attempt Cap</strong>
+              <p><code>case.current_attempt >= max_attempts (3)</code> → TERMINATE.</p>
+            </div>
+          </div>
+          <div class="guardrail-card">
+            <span class="g-num">Rule 4</span>
+            <div class="g-info">
+              <strong>Reasoning Loop Circuit Breaker</strong>
+              <p><code>case.loop_iterations >= max_loop_iterations (4)</code> → ESCALATE to human desk.</p>
+            </div>
+          </div>
+          <div class="guardrail-card">
+            <span class="g-num">Rule 5</span>
+            <div class="g-info">
+              <strong>Contact Cooldown Enforcement</strong>
+              <p>No two ACT calls within <code>retry_cooldown_hours</code> for the same case.</p>
+            </div>
+          </div>
+          <div class="guardrail-card">
+            <span class="g-num">Rule 6</span>
+            <div class="g-info">
+              <strong>DND Regulation Compliance</strong>
+              <p>Prohibits WhatsApp & SMS dispatches during DND window (21:00 - 08:00).</p>
+            </div>
+          </div>
+          <div class="guardrail-card">
+            <span class="g-num">Rule 7</span>
+            <div class="g-info">
+              <strong>Control Group Isolation</strong>
+              <p>Cases in the 20% control group bypass all ACT calls to measure true incremental lift.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- AUDIT TRAIL MODAL DRAWER -->
+  <div id="audit-modal" class="modal-backdrop">
+    <div class="modal-drawer glass">
+      <div class="modal-header">
+        <div>
+          <h2 id="modal-case-title">Case Details</h2>
+          <span id="modal-case-subtitle" class="text-muted"></span>
+        </div>
+        <button class="btn-close" id="btn-close-modal">✕</button>
+      </div>
+      <div class="modal-body" id="modal-audit-body">
+        <div class="text-center py-4">Loading audit trail...</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
