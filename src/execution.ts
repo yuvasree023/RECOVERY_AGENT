@@ -49,9 +49,22 @@ export function executeRecoveryAction(
   // 4. Update case state
   caseRecord.currentAttempt += 1;
   caseRecord.loopIterations += 1;
+  caseRecord.contactCount = (caseRecord.contactCount || 0) + 1;
   caseRecord.totalCostIncurred += costPerSend;
-  caseRecord.currentState = 'EXECUTED';
+  caseRecord.currentState = 'ACT';
   caseRecord.nextActionTime = actionPlan.actionTime;
+  caseRecord.lastToolResult = toolResult;
+  caseRecord.updatedAt = currentSimTime;
+
+  caseRecord.previousActions = caseRecord.previousActions || [];
+  caseRecord.previousActions.push({
+    actionType,
+    channel,
+    timestamp: currentSimTime.toISOString(),
+    resultStatus: 'EXECUTED',
+    toolCallId: toolResult.retry?.retry_id || toolResult.message?.message_id || toolResult.discount?.coupon_id
+  });
+
   db.saveCase(caseRecord);
 
   // 5. Audit log

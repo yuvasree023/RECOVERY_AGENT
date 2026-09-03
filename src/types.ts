@@ -36,7 +36,22 @@ export interface ChannelCostRecord {
   dndEnd: string | null; // '08:00'
 }
 
-export type CaseState = 'INIT' | 'DIAGNOSED' | 'SCHEDULED' | 'EXECUTED' | 'RESOLVED' | 'TERMINATED' | 'ESCALATED';
+export type CaseState =
+  | 'NEW'
+  | 'OBSERVE'
+  | 'REASON'
+  | 'PLAN'
+  | 'GUARDRAIL_CHECK'
+  | 'ACT'
+  | 'OBSERVE_OUTCOME'
+  | 'DECIDE_NEXT'
+  | 'RESOLVED'
+  | 'TERMINATED'
+  | 'ESCALATED'
+  | 'INIT'
+  | 'DIAGNOSED'
+  | 'SCHEDULED'
+  | 'EXECUTED';
 
 export interface RecoveryCaseRecord {
   caseId: string;
@@ -52,9 +67,55 @@ export interface RecoveryCaseRecord {
   isControlGroup: boolean;
   totalRecoveredAmount: number;
   totalCostIncurred: number;
+  // Standardized case object extensions
+  currency?: string;
+  customerContext?: {
+    segment: string;
+    ltv: number;
+    preferredChannel?: string;
+    dnd?: boolean;
+    optedOut?: boolean;
+  };
+  riskContext?: {
+    fraudScore: number;
+    declineCode: string;
+    riskBand: string;
+  };
+  previousActions?: Array<{
+    actionType: string;
+    channel: string;
+    timestamp: string;
+    toolCallId?: string;
+    resultStatus?: string;
+    reason?: string;
+  }>;
+  availableActions?: string[];
+  guardrailState?: {
+    lastCheckPassed: boolean;
+    lastRuleEvaluated?: number | null;
+    violatedRule?: number | null;
+    rejectionReason?: string | null;
+  };
+  lastToolResult?: any;
+  contactCount?: number;
+  escalationStatus?: string | null;
+  decisionReason?: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-export type AuditStep = 'OBSERVE' | 'REASON' | 'PLAN' | 'GUARDRAIL_CHECK' | 'GUARDRAIL_FAIL' | 'REPLAN' | 'ACT' | 'OBSERVE_OUTCOME' | 'ESCALATE' | 'CLOSE';
+export type AuditStep =
+  | 'OBSERVE'
+  | 'REASON'
+  | 'PLAN'
+  | 'GUARDRAIL_CHECK'
+  | 'GUARDRAIL_FAIL'
+  | 'REPLAN'
+  | 'ACT'
+  | 'OBSERVE_OUTCOME'
+  | 'DECIDE_NEXT'
+  | 'ESCALATE'
+  | 'CLOSE';
 
 export interface AuditLogRecord {
   logId: string;

@@ -1,34 +1,46 @@
-// Recover Dashboard Frontend Logic
+// RECOVER — Frontend Orchestrator & Deep Timeline Engine
 
 document.addEventListener("DOMContentLoaded", () => {
   initTabs();
+  initFlowNodes();
   fetchOverviewMetrics();
-  fetchCasesList();
-  initBatchRunner();
-  initWebhookSimulator();
-  initModal();
+  fetchCases();
+  initBatchButton();
+  initSimulator();
 });
 
-// Tab Navigation
+// ---------------------------------------------------------------------------
+// Tabs Navigation
+// ---------------------------------------------------------------------------
 function initTabs() {
-  const tabs = document.querySelectorAll(".nav-tab");
-  tabs.forEach(tab => {
-    tab.addEventListener("click", () => {
-      tabs.forEach(t => t.classList.remove("active"));
-      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-
-      tab.classList.add("active");
-      const target = tab.getAttribute("data-tab");
-      const content = document.getElementById(`tab-${target}`);
-      if (content) content.classList.add("active");
-
-      if (target === "cases") fetchCasesList();
-      if (target === "overview") fetchOverviewMetrics();
+  const tabBtns = document.querySelectorAll(".nav-tab");
+  tabBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const tabName = btn.getAttribute("data-tab");
+      switchTab(tabName);
     });
   });
 }
 
-// Fetch Overview Metrics
+function switchTab(tabName) {
+  document.querySelectorAll(".nav-tab").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+
+  const targetBtn = document.querySelector(`.nav-tab[data-tab="${tabName}"]`);
+  const targetContent = document.getElementById(`tab-${tabName}`);
+
+  if (targetBtn) targetBtn.classList.add("active");
+  if (targetContent) targetContent.classList.add("active");
+
+  if (tabName === "cases") fetchCases();
+  if (tabName === "overview") fetchOverviewMetrics();
+  if (tabName === "audit") fetchAuditLogs();
+  if (tabName === "agent-runs") renderAgentRunsTable();
+}
+
+// ---------------------------------------------------------------------------
+// Overview Metrics
+// ---------------------------------------------------------------------------
 async function fetchOverviewMetrics() {
   try {
     const res = await fetch("/metrics");
@@ -36,46 +48,116 @@ async function fetchOverviewMetrics() {
     const data = await res.json();
 
     if (data.net_recovered_amount !== undefined) {
-      document.getElementById("kpi-net-recovered").innerText = `₹${data.net_recovered_amount.toLocaleString("en-IN", {minimumFractionDigits: 2})}`;
-      document.getElementById("kpi-gross-recovered").innerText = `₹${data.gross_recovered_amount.toLocaleString("en-IN", {minimumFractionDigits: 2})}`;
+      document.getElementById("kpi-net-recovered").innerText = `₹${data.net_recovered_amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+      document.getElementById("kpi-gross-recovered").innerText = `₹${data.gross_recovered_amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+      document.getElementById("kpi-total-cost").innerText = `₹${data.total_cost_incurred.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
       document.getElementById("kpi-roi-multiple").innerText = `${data.roi_multiple.toFixed(1)}x`;
+
+      const diffPct = (data.observed_recovery_rate_diff * 100).toFixed(2);
+      document.getElementById("kpi-rate-difference").innerText = `+${diffPct}%`;
+      document.getElementById("kpi-treatment-rate").innerText = `${(data.treatment_resolution_rate * 100).toFixed(2)}%`;
+      document.getElementById("kpi-baseline-rate").innerText = `${(data.control_resolution_rate * 100).toFixed(2)}%`;
+
+      document.getElementById("kpi-guardrail-blocks").innerText = data.guardrail_blocks_count || 0;
+      document.getElementById("kpi-escalations").innerText = data.escalation_count || 0;
+
+      // Update interactive flow stats
+      document.getElementById("flow-stat-recovery").innerText = `₹${(data.net_recovered_amount / 100000).toFixed(2)}L`;
     }
   } catch (err) {
-    console.error("Failed to fetch metrics:", err);
+    console.error("Failed to load metrics:", err);
   }
 }
 
-// Fetch Cases List
-let allCases = [];
+// ---------------------------------------------------------------------------
+// Interactive Revenue Recovery Flow
+// ---------------------------------------------------------------------------
+const FLOW_DESCRIPTIONS = {
+  risk: {
+    title: "Stage 01: Revenue at Risk",
+    text: "Ingests transaction drop-offs: insufficient funds, card expiry, bank timeouts, and cart abandonments with real-time customer LTV & consent metadata.",
+    actionText: "View Cases &rarr;",
+    actionTab: "cases"
+  },
+  brain: {
+    title: "Stage 02: Agent Brain (Gemini 2.5 Flash)",
+    text: "Autonomous reasoning engine evaluates ML likelihood signal, customer segment, and past attempts to choose bounded recovery tools and parameters.",
+    actionText: "Inspect State Machine &rarr;",
+    actionTab: "agent-runs"
+  },
+  actions: {
+    title: "Stage 03: Production Tools",
+    text: "Dispatches simulated production tools: Payment Gateway Cooldown Retries, Omnichannel Messaging (WhatsApp/Email/SMS), Bounded Coupons, and Human Desk routing.",
+    actionText: "Open Webhook Simulator &rarr;",
+    actionTab: "simulator"
+  },
+  guardrails: {
+    title: "Stage 04: Deterministic Guardrails",
+    text: "7 fail-closed rules with absolute veto power: enforces telecom DND curfew (21:00-08:00), opt-out status, fraud score limits, max attempts, and holdout baseline.",
+    actionText: "View Audit Log &rarr;",
+    actionTab: "audit"
+  },
+  recovery: {
+    title: "Stage 05: Recovered Value",
+    text: "Reconciles settlement outcomes, records net yield, verifies zero compliance violations, and safely closes terminal recovery cases.",
+    actionText: "View Playbooks &rarr;",
+    actionTab: "playbooks"
+  }
+};
 
-async function fetchCasesList() {
+function initFlowNodes() {
+  const nodes = document.querySelectorAll(".flow-node");
+  nodes.forEach(node => {
+    node.addEventListener("click", () => {
+      nodes.forEach(n => n.classList.remove("active-node"));
+      node.classList.add("active-node");
+
+      const flowKey = node.getAttribute("data-flow");
+      const info = FLOW_DESCRIPTIONS[flowKey];
+      if (info) {
+        document.getElementById("flow-inspector-text").innerHTML = `<strong>${info.title}</strong> &mdash; ${info.text}`;
+        const actionEl = document.getElementById("flow-inspector-action");
+        actionEl.innerHTML = info.actionText;
+        actionEl.onclick = () => switchTab(info.actionTab);
+      }
+    });
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Cases Explorer & Deep Timeline Drawer
+// ---------------------------------------------------------------------------
+let cachedCases = [];
+
+async function fetchCases() {
   const tbody = document.getElementById("cases-table-body");
-  tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4" style="text-align: center; color: var(--text-muted);">Fetching live cases...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 24px; color: var(--text-muted);">Loading live cases...</td></tr>`;
 
   try {
     const res = await fetch("/api/cases");
     if (!res.ok) throw new Error("Failed to load cases");
-    allCases = await res.json();
-    renderCasesTable(allCases);
+    cachedCases = await res.json();
+    renderCasesTable(cachedCases);
+    renderAgentRunsTable();
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4" style="text-align: center; color: #fb7185;">Error loading cases: ${err.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 24px; color: var(--accent-rose);">Error: ${err.message}</td></tr>`;
   }
 }
 
 function renderCasesTable(cases) {
   const tbody = document.getElementById("cases-table-body");
   const stateFilter = document.getElementById("filter-state").value;
-  const playbookFilter = document.getElementById("filter-playbook").value;
+  const pbFilter = document.getElementById("filter-playbook").value;
   const search = document.getElementById("case-search").value.toLowerCase().trim();
 
   let filtered = cases.filter(c => {
     if (stateFilter !== "ALL" && c.current_state !== stateFilter) return false;
-    if (playbookFilter !== "ALL" && c.event_type !== playbookFilter) return false;
+    if (pbFilter !== "ALL" && c.event_type !== pbFilter) return false;
     if (search) {
       const matchCase = c.case_id.toLowerCase().includes(search);
-      const matchEvt = c.event_id.toLowerCase().includes(search);
       const matchCust = c.customer_id.toLowerCase().includes(search);
-      if (!matchCase && !matchEvt && !matchCust) return false;
+      const matchDecline = c.decline_code.toLowerCase().includes(search);
+      if (!matchCase && !matchCust && !matchDecline) return false;
     }
     return true;
   });
@@ -86,287 +168,334 @@ function renderCasesTable(cases) {
   }
 
   tbody.innerHTML = filtered.map(c => {
-    const stateBadgeClass = `badge-${c.current_state.toLowerCase()}`;
-    const probPct = c.recovery_probability ? `${(c.recovery_probability * 100).toFixed(0)}%` : "—";
-    const recAmt = c.total_recovered_amount > 0 ? `<strong style="color: var(--accent-emerald);">₹${c.total_recovered_amount.toLocaleString("en-IN")}</strong>` : "₹0.00";
+    const stateBadge = getStateBadge(c.current_state);
+    const prob = c.recovery_probability ? `${(c.recovery_probability * 100).toFixed(0)}%` : "—";
+    const recStr = c.total_recovered_amount > 0
+      ? `<strong style="color: var(--accent-emerald);">₹${c.total_recovered_amount.toLocaleString("en-IN")}</strong>`
+      : `<span style="color: var(--text-dim);">₹0</span>`;
 
     return `
-      <tr>
+      <tr class="clickable-row" onclick="openCaseDrawer('${c.case_id}')">
         <td>
-          <div style="font-family: var(--font-mono); font-size: 11px; color: #38bdf8;">${c.event_id}</div>
-          <div style="font-size: 10px; color: var(--text-sub);">${c.case_id.slice(0, 8)}...</div>
+          <div style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-blue);">${c.case_id}</div>
+          <div style="font-size: 10px; color: var(--text-dim);">${c.event_id}</div>
         </td>
         <td>
           <div>${c.customer_id}</div>
-          <div style="font-size: 10px; color: var(--text-muted);">${c.customer_segment} Segment</div>
+          <span style="font-size: 10px; color: var(--text-muted);">${c.customer_segment} LTV</span>
         </td>
-        <td><span class="badge ${c.event_type === 'CART_ABANDON' ? 'badge-ml' : 'badge-executed'}">${c.event_type}</span></td>
-        <td><code style="font-size: 11px; color: #93c5fd;">${c.decline_code}</code></td>
-        <td>₹${c.amount.toLocaleString("en-IN")}</td>
-        <td><span class="badge ${stateBadgeClass}">${c.current_state}</span></td>
-        <td>${probPct}</td>
-        <td>${recAmt}</td>
-        <td>
-          <button class="btn btn-secondary btn-sm" onclick="openAuditModal('${c.case_id}')">
-            🔍 Audit Trail
-          </button>
+        <td><code style="font-size: 11px; color: var(--text-secondary);">${c.decline_code}</code></td>
+        <td><strong>₹${c.amount.toLocaleString("en-IN")}</strong></td>
+        <td>${stateBadge}</td>
+        <td>${c.current_attempt}/${c.max_attempts}</td>
+        <td>${prob}</td>
+        <td style="max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--text-muted);">
+          ${c.decision_reason || 'Evaluating...'}
         </td>
+        <td>${recStr}</td>
       </tr>
     `;
   }).join("");
 }
 
-// Search & Filter Listeners
-document.getElementById("case-search").addEventListener("input", () => renderCasesTable(allCases));
-document.getElementById("filter-state").addEventListener("change", () => renderCasesTable(allCases));
-document.getElementById("filter-playbook").addEventListener("change", () => renderCasesTable(allCases));
-document.getElementById("btn-refresh-cases").addEventListener("click", fetchCasesList);
+// Filter event listeners
+document.getElementById("case-search").addEventListener("input", () => renderCasesTable(cachedCases));
+document.getElementById("filter-state").addEventListener("change", () => renderCasesTable(cachedCases));
+document.getElementById("filter-playbook").addEventListener("change", () => renderCasesTable(cachedCases));
 
-// Modal Logic
-function initModal() {
-  document.getElementById("btn-close-modal").addEventListener("click", () => {
-    document.getElementById("audit-modal").classList.remove("open");
-  });
+function getStateBadge(state) {
+  if (state === "RESOLVED") return `<span class="badge badge-resolved">RESOLVED</span>`;
+  if (state === "TERMINATED") return `<span class="badge badge-terminated">TERMINATED</span>`;
+  if (state === "ESCALATED") return `<span class="badge badge-escalated">ESCALATED</span>`;
+  if (state === "ACT" || state === "SCHEDULED") return `<span class="badge badge-act">ACT</span>`;
+  if (state === "REPLAN") return `<span class="badge badge-replan">REPLAN</span>`;
+  return `<span class="badge badge-act">${state}</span>`;
 }
 
-async function openAuditModal(caseId) {
-  const modal = document.getElementById("audit-modal");
-  const modalBody = document.getElementById("modal-audit-body");
-  const title = document.getElementById("modal-case-title");
-  const subtitle = document.getElementById("modal-case-subtitle");
+// ---------------------------------------------------------------------------
+// Deep Case Timeline Drawer
+// ---------------------------------------------------------------------------
+async function openCaseDrawer(caseId) {
+  const drawer = document.getElementById("case-timeline-drawer");
+  const backdrop = document.getElementById("drawer-backdrop");
+  const track = document.getElementById("drawer-timeline-track");
 
-  modal.classList.add("open");
-  modalBody.innerHTML = `<div class="text-center py-4" style="text-align: center; color: var(--text-muted);">Fetching immutable audit trail for case ${caseId}...</div>`;
-  title.innerText = `Case Audit Log`;
-  subtitle.innerText = `UUID: ${caseId}`;
+  track.innerHTML = `<div style="color: var(--text-muted); padding: 16px;">Loading deep case timeline...</div>`;
+  drawer.classList.add("open");
+  backdrop.classList.add("open");
 
   try {
-    const res = await fetch(`/cases/${caseId}/audit`);
-    if (!res.ok) throw new Error("Failed to load audit trail");
+    const res = await fetch(`/cases/${caseId}`);
+    if (!res.ok) throw new Error("Case not found");
     const data = await res.json();
 
-    let html = `<div class="audit-timeline">`;
-    data.audit_trail.forEach(step => {
-      let detailFormatted = "";
-      if (typeof step.detail === "object") {
-        let specialCards = "";
-        
-        // Chain-of-Thought (CoT) card
-        const thought = step.detail.llm_thought || step.detail.chain_of_thought;
-        if (thought) {
-          specialCards += `
-            <div style="background: rgba(147, 51, 234, 0.12); border-left: 3px solid #c084fc; padding: 10px 14px; border-radius: 6px; margin-bottom: 8px;">
-              <div style="font-size: 11px; font-weight: 700; color: #c084fc; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-                <span>🧠 AI Agent Chain-of-Thought Reasoning</span>
-              </div>
-              <div style="font-size: 13px; line-height: 1.5; color: #f1f5f9; font-style: italic;">
-                "${thought}"
-              </div>
-            </div>
-          `;
-        }
+    document.getElementById("drawer-case-title").innerText = `Case ${data.case_id}`;
+    document.getElementById("drawer-case-subtitle").innerText = `Event: ${data.event_id} (${data.current_state})`;
 
-        // Proposed Tool in PLAN step
-        if (step.detail.proposed_tool) {
-          specialCards += `
-            <div style="background: rgba(59, 130, 246, 0.1); border-left: 3px solid #60a5fa; padding: 8px 12px; border-radius: 6px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
-              <div>
-                <span style="font-size: 11px; color: #93c5fd; text-transform: uppercase; font-weight: 600;">Proposed Tool Action:</span>
-                <code style="background: rgba(0,0,0,0.4); color: #38bdf8; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 600;">${step.detail.proposed_tool}</code>
-              </div>
-              <span style="font-size: 11px; background: rgba(59, 130, 246, 0.25); color: #bfdbfe; padding: 2px 8px; border-radius: 12px;">Channel: ${step.detail.channel || 'N/A'}</span>
-            </div>
-          `;
-        }
+    document.getElementById("drawer-state-val").innerHTML = getStateBadge(data.current_state);
+    document.getElementById("drawer-amount-val").innerText = `₹${data.total_recovered_amount.toLocaleString("en-IN")} / ₹${data.risk_context?.fraudScore !== undefined ? 'Risk ' + data.risk_context.fraudScore : ''}`;
+    document.getElementById("drawer-customer-val").innerText = `${data.customer_id} (${data.customer_context?.segment || 'Normal'})`;
+    document.getElementById("drawer-decline-val").innerText = data.risk_context?.declineCode || "UNKNOWN";
+    document.getElementById("drawer-decision-reason-val").innerText = data.decision_reason || "Autonomous reasoning active.";
 
-        // Guardrail evaluation card
-        if (step.step === "GUARDRAIL_CHECK") {
-          const passed = step.detail.passed;
-          const status = step.detail.status;
-          const reason = step.detail.reason || "All 7 fail-closed rules passed.";
-          const color = passed ? "#4ade80" : "#f43f5e";
-          const bg = passed ? "rgba(34, 197, 94, 0.1)" : "rgba(244, 63, 94, 0.1)";
-          specialCards += `
-            <div style="background: ${bg}; border-left: 3px solid ${color}; padding: 8px 12px; border-radius: 6px; margin-bottom: 8px;">
-              <div style="font-size: 11px; font-weight: 700; color: ${color}; text-transform: uppercase;">
-                🛡️ Guardrail Layer Decision: ${status} (${passed ? 'APPROVED' : 'INTERCEPTED/VETOED'})
-              </div>
-              <div style="font-size: 12px; color: #cbd5e1; margin-top: 3px;">${reason}</div>
-            </div>
-          `;
-        }
+    // Render deep timeline steps
+    const timeline = data.timeline || [];
+    if (timeline.length === 0) {
+      track.innerHTML = `<div style="color: var(--text-muted); padding: 16px;">No audit steps recorded yet.</div>`;
+      return;
+    }
 
-        // Customer message preview
-        if (step.detail.rendered_message) {
-          specialCards += `
-            <div class="msg-bubble">
-              <strong style="color: #4ade80; display: block; margin-bottom: 4px;">💬 Sent Customer Message (${step.detail.channel}):</strong>
-              ${step.detail.rendered_message}
-            </div>
-          `;
-        }
+    track.innerHTML = timeline.map(step => {
+      const dotClass = step.status === "success" ? "dot-success" : step.status === "warning" ? "dot-warning" : step.status === "danger" ? "dot-danger" : "";
+      const timeStr = new Date(step.timestamp).toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-        detailFormatted = `
-          ${specialCards}
-          <details style="margin-top: 6px;">
-            <summary style="font-size: 11px; color: var(--text-muted); cursor: pointer;">View Raw Step Context JSON</summary>
-            <pre style="font-size: 11px; color: #cbd5e1; background: rgba(0,0,0,0.4); padding: 8px; border-radius: 4px; overflow-x: auto; margin-top: 4px;">${JSON.stringify(step.detail, null, 2)}</pre>
-          </details>
-        `;
-      } else {
-        detailFormatted = `<div style="font-size: 12px; color: var(--text-muted);">${step.detail}</div>`;
-      }
-
-      html += `
-        <div class="audit-node">
-          <div class="audit-node-header">
-            <span class="audit-step-tag">STEP: ${step.step}</span>
-            <span class="audit-time">${step.timestamp}</span>
+      return `
+        <div class="timeline-item">
+          <div class="timeline-dot ${dotClass}"></div>
+          <div class="timeline-item-header">
+            <span class="timeline-item-title">${step.title}</span>
+            <span class="timeline-item-time">${timeStr}</span>
           </div>
-          ${detailFormatted}
+          <div class="timeline-item-desc">${step.description}</div>
         </div>
       `;
-    });
-    html += `</div>`;
-    modalBody.innerHTML = html;
+    }).join("");
+
   } catch (err) {
-    modalBody.innerHTML = `<div style="color: #fb7185;">Error loading audit logs: ${err.message}</div>`;
+    track.innerHTML = `<div style="color: var(--accent-rose); padding: 16px;">Failed to load case details: ${err.message}</div>`;
   }
 }
 
-// Batch Runner
-function initBatchRunner() {
-  const slider = document.getElementById("sim-control-pct");
-  const sliderVal = document.getElementById("sim-control-val");
-  slider.addEventListener("input", (e) => {
-    sliderVal.innerText = `${e.target.value}% (A/B Baseline)`;
-  });
-
-  const runSim = async () => {
-    const term = document.getElementById("sim-output-content");
-    const badge = document.getElementById("sim-status-badge");
-    badge.innerText = "Running Replay...";
-    badge.style.background = "rgba(37, 99, 235, 0.4)";
-    term.innerHTML = `<div style="color: #38bdf8;">[1/3] Ingesting 223 events and partitioning control cohort (${slider.value}%)...</div>`;
-
-    try {
-      const pct = parseFloat(slider.value) / 100.0;
-      const seed = parseInt(document.getElementById("sim-seed").value) || 42;
-
-      const res = await fetch("/batch/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ control_group_pct: pct, random_seed: seed })
-      });
-
-      if (!res.ok) throw new Error("Simulation failed");
-      const data = await res.json();
-      const s = data.batch_summary;
-
-      badge.innerText = "Completed";
-      badge.style.background = "rgba(16, 185, 129, 0.4)";
-
-      term.innerHTML = `
-        <pre>
-===========================================================================
-                RECOVER — BATCH REVENUE RECOVERY REPORT
-===========================================================================
- Total Events Processed:        ${s.total_events_processed}
- Treatment Cohort:              ${s.treatment_cases_count} cases (80%)
- Control Cohort (Baseline):     ${s.control_cases_count} cases (20%)
----------------------------------------------------------------------------
- Treatment Resolution Rate:     ${(s.treatment_resolution_rate * 100).toFixed(2)}%
- Control Baseline Rate:         ${(s.control_resolution_rate * 100).toFixed(2)}%
- Incremental Recovery Lift:     +${s.incremental_lift_percentage_points.toFixed(2)}% percentage points
----------------------------------------------------------------------------
- Gross Recovered Revenue:       INR ${s.gross_recovered_amount.toLocaleString('en-IN', {minimumFractionDigits: 2})}
- Total Channel Costs Incurred:  INR ${s.total_cost_incurred.toFixed(2)}
- NET RECOVERED REVENUE:         INR ${s.net_recovered_amount.toLocaleString('en-IN', {minimumFractionDigits: 2})}
- Recovery ROI Multiple:         ${s.roi_multiple.toFixed(1)}x
- Compliance Violations:         ${s.compliance_violations_count} (100% Guardrail Compliant)
- Escalation Rate:               ${(s.escalation_rate * 100).toFixed(2)}%
- Termination Rate:              ${(s.termination_rate * 100).toFixed(2)}%
-===========================================================================
-        </pre>
-      `;
-      fetchOverviewMetrics();
-    } catch (err) {
-      badge.innerText = "Error";
-      badge.style.background = "rgba(244, 63, 94, 0.4)";
-      term.innerHTML = `<div style="color: #fb7185;">Simulation failed: ${err.message}</div>`;
-    }
-  };
-
-  document.getElementById("btn-run-full-simulation").addEventListener("click", runSim);
-  document.getElementById("btn-run-batch-top").addEventListener("click", () => {
-    document.querySelector('[data-tab="simulation"]').click();
-    runSim();
-  });
+function closeDrawer() {
+  document.getElementById("case-timeline-drawer").classList.remove("open");
+  document.getElementById("drawer-backdrop").classList.remove("open");
 }
 
+// ---------------------------------------------------------------------------
+// Agent Runs Tab
+// ---------------------------------------------------------------------------
+function renderAgentRunsTable() {
+  const tbody = document.getElementById("agent-runs-tbody");
+  if (!tbody || cachedCases.length === 0) return;
+
+  const slice = cachedCases.slice(0, 15);
+  tbody.innerHTML = slice.map(c => {
+    return `
+      <tr class="clickable-row" onclick="openCaseDrawer('${c.case_id}')">
+        <td style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-blue);">${c.case_id}</td>
+        <td><code>${c.event_type}</code></td>
+        <td>${getStateBadge(c.current_state)}</td>
+        <td style="font-size: 12px; color: var(--text-secondary); max-width: 320px;">${c.decision_reason || 'Reasoning active'}</td>
+        <td>${c.loop_iterations || 1} turns</td>
+        <td>${c.total_recovered_amount > 0 ? '<strong style="color: var(--accent-emerald);">Recovered</strong>' : '<span style="color: var(--text-muted);">Executed / Logged</span>'}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+// ---------------------------------------------------------------------------
 // Webhook Simulator
-function initWebhookSimulator() {
-  const form = document.getElementById("webhook-sim-form");
-  const liveResult = document.getElementById("wh-live-result");
+// ---------------------------------------------------------------------------
+const PRESETS = {
+  adaptive_recovery: {
+    event_type: "UPI_PAYMENT_FAIL",
+    decline_code: "NETWORK_TIMEOUT",
+    amount: 3499,
+    segment: "High",
+    fraud_score: 0.10,
+    time_of_day: "DAY",
+    whatsapp_consent: true,
+    opt_out: false
+  },
+  guardrail_replan: {
+    event_type: "UPI_PAYMENT_FAIL",
+    decline_code: "NETWORK_TIMEOUT",
+    amount: 1999,
+    segment: "High",
+    fraud_score: 0.05,
+    time_of_day: "NIGHT_DND", // 22:30 night - triggers Rule 6 DND curfew
+    whatsapp_consent: true,
+    opt_out: false
+  },
+  safe_termination: {
+    event_type: "UPI_PAYMENT_FAIL",
+    decline_code: "CARD_DECLINED",
+    amount: 14500,
+    segment: "Low",
+    fraud_score: 0.88, // > 0.80 - triggers Rule 2 Fraud check
+    time_of_day: "DAY",
+    whatsapp_consent: false,
+    opt_out: false
+  },
+  cart_dropoff: {
+    event_type: "CART_ABANDON",
+    decline_code: "HIGH_SHIPPING_COST",
+    amount: 4200,
+    segment: "Medium",
+    fraud_score: 0.05,
+    time_of_day: "DAY",
+    whatsapp_consent: true,
+    opt_out: false
+  }
+};
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const eventType = document.getElementById("wh-event-type").value;
-    const amount = parseFloat(document.getElementById("wh-amount").value);
-    const customerId = document.getElementById("wh-customer-id").value;
-    const declineCode = document.getElementById("wh-decline-code").value;
-    const fraudScore = parseFloat(document.getElementById("wh-fraud-score").value);
+function applyPreset(key) {
+  const p = PRESETS[key];
+  if (!p) return;
 
-    const eventId = `WH_SIM_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+  document.getElementById("sim-event-type").value = p.event_type;
+  document.getElementById("sim-decline-code").value = p.decline_code;
+  document.getElementById("sim-amount").value = p.amount;
+  document.getElementById("sim-segment").value = p.segment;
+  document.getElementById("sim-fraud-score").value = p.fraud_score;
+  document.getElementById("sim-time-of-day").value = p.time_of_day;
+  document.getElementById("sim-whatsapp-consent").checked = p.whatsapp_consent;
+  document.getElementById("sim-opt-out").checked = p.opt_out;
+}
 
-    liveResult.innerHTML = `<div style="color: #38bdf8;">[OBSERVE] Ingesting webhook ${eventId} for customer ${customerId}...</div>`;
+function initSimulator() {
+  const runBtn = document.getElementById("btn-run-simulation");
+  if (!runBtn) return;
+
+  runBtn.addEventListener("click", async () => {
+    const term = document.getElementById("trace-terminal-feed");
+    const pill = document.getElementById("trace-status-pill");
+
+    pill.className = "badge badge-warning";
+    pill.innerText = "Executing Agent Loop...";
+    term.innerHTML = `<div class="trace-line" style="color: var(--text-dim);">&gt; Ingesting simulated webhook event...</div>`;
 
     const payload = {
-      event_id: eventId,
-      customer_id: customerId,
-      event_type: eventType === "cart-abandoned" ? "CART_ABANDON" : (eventType === "subscription-failed" ? "SUBSCRIPTION_FAIL" : "UPI_PAYMENT_FAIL"),
-      amount: amount,
-      status: eventType === "cart-abandoned" ? "DROPPED" : "FAILED",
-      decline_code: declineCode,
-      attempt_number: 1,
-      fraud_score: fraudScore,
-      retry_cooldown_hours: declineCode === "INSUFFICIENT_FUNDS" ? 24 : (declineCode === "CARD_EXPIRED" ? 48 : 2)
+      event_type: document.getElementById("sim-event-type").value,
+      decline_code: document.getElementById("sim-decline-code").value,
+      amount: Number(document.getElementById("sim-amount").value),
+      customer_segment: document.getElementById("sim-segment").value,
+      fraud_score: Number(document.getElementById("sim-fraud-score").value),
+      time_of_day: document.getElementById("sim-time-of-day").value,
+      whatsapp_consent: document.getElementById("sim-whatsapp-consent").checked,
+      opt_out: document.getElementById("sim-opt-out").checked
     };
 
     try {
-      const res = await fetch(`/webhooks/${eventType}`, {
+      const res = await fetch("/api/simulate-case", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
 
-      const data = await res.json();
+      if (!res.ok) throw new Error("Simulator returned error");
+      const result = await res.json();
 
-      // Poll audit trail for live visualization
-      setTimeout(async () => {
-        try {
-          const auditRes = await fetch(`/cases/${data.case_id}/audit`);
-          const auditData = await auditRes.json();
+      pill.className = "badge badge-resolved";
+      pill.innerText = `Finished: ${result.summary.final_state}`;
 
-          let feedHtml = `<div style="margin-bottom: 12px; font-weight: 700; color: #4ade80;">✓ Webhook Accepted & Agent Executed (Case: ${data.case_id.slice(0, 8)}...)</div>`;
-          auditData.audit_trail.forEach(step => {
-            const isPass = step.step === "ACT" || step.step === "CLOSE";
-            feedHtml += `
-              <div class="feed-step ${isPass ? 'pass' : ''}">
-                <div class="feed-step-title">[${step.step}]</div>
-                <div class="feed-step-desc">${typeof step.detail === 'object' ? JSON.stringify(step.detail) : step.detail}</div>
-              </div>
-            `;
-          });
-          liveResult.innerHTML = feedHtml;
+      // Animate line-by-line trace
+      const logs = result.logs || [];
+      let index = 0;
+      term.innerHTML = "";
+
+      const interval = setInterval(() => {
+        if (index >= logs.length) {
+          clearInterval(interval);
+          term.innerHTML += `<div class="trace-line" style="color: var(--accent-emerald); font-weight: 700; margin-top: 10px;">[SUCCESS] Case reached terminal state: ${result.summary.final_state} (Recovered: ₹${result.summary.recovered_amount})</div>`;
+          term.scrollTop = term.scrollHeight;
           fetchOverviewMetrics();
-        } catch (err) {
-          liveResult.innerHTML = `<div>Case created: ${data.case_id}</div>`;
+          fetchCases();
+          return;
         }
-      }, 500);
+
+        const l = logs[index];
+        const time = new Date(l.timestamp).toLocaleTimeString();
+        const detailStr = JSON.stringify(l.detail);
+        const reason = l.detail?.decision_reason ? ` | <em>${l.detail.decision_reason}</em>` : "";
+
+        term.innerHTML += `
+          <div class="trace-line">
+            <span class="trace-timestamp">[${time}]</span>
+            <span class="trace-step step-${l.step}">[${l.step}]</span>
+            <span>${detailStr.slice(0, 100)}...${reason}</span>
+          </div>
+        `;
+        term.scrollTop = term.scrollHeight;
+        index++;
+      }, 180);
 
     } catch (err) {
-      liveResult.innerHTML = `<div style="color: #fb7185;">Webhook trigger failed: ${err.message}</div>`;
+      pill.className = "badge badge-escalated";
+      pill.innerText = "Error";
+      term.innerHTML += `<div class="trace-line" style="color: var(--accent-rose);">Failed: ${err.message}</div>`;
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Audit Trail Tab
+// ---------------------------------------------------------------------------
+async function fetchAuditLogs() {
+  const tbody = document.getElementById("audit-table-body");
+  const step = document.getElementById("audit-filter-step")?.value || "ALL";
+  tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--text-muted);">Fetching audit records...</td></tr>`;
+
+  try {
+    const res = await fetch(`/api/audit/logs?step=${step}&limit=60`);
+    if (!res.ok) throw new Error("Failed to fetch logs");
+    const data = await res.json();
+
+    const logs = data.logs || [];
+    if (logs.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--text-muted);">No audit logs matching step ${step}.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = logs.map(l => {
+      const time = new Date(l.timestamp).toLocaleString();
+      const reason = l.decision_reason || l.detail?.reason || "Standard system transition";
+
+      return `
+        <tr>
+          <td style="font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);">${time}</td>
+          <td style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-blue);">${l.case_id}</td>
+          <td><span class="badge badge-act step-${l.step}">${l.step}</span></td>
+          <td style="font-size: 12px; color: var(--text-primary); max-width: 380px;">${reason}</td>
+          <td style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            ${JSON.stringify(l.detail)}
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--accent-rose);">Failed: ${err.message}</td></tr>`;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Quick Replay Button
+// ---------------------------------------------------------------------------
+function initBatchButton() {
+  const btn = document.getElementById("btn-quick-replay");
+  if (!btn) return;
+
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    btn.innerText = "Replaying (223 Events)...";
+
+    try {
+      const res = await fetch("/batch/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ control_group_pct: 0.20, random_seed: 42 })
+      });
+
+      if (!res.ok) throw new Error("Replay failed");
+      await fetchOverviewMetrics();
+      await fetchCases();
+      alert("Offline historical replay completed successfully across 223 events with 20% simulated baseline comparison.");
+    } catch (err) {
+      alert(`Replay error: ${err.message}`);
+    } finally {
+      btn.disabled = false;
+      btn.innerText = "Run Offline Replay";
     }
   });
 }

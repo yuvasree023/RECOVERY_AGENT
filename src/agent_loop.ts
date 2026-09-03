@@ -1,9 +1,9 @@
 import { Database } from './models.js';
-import { RecoveryCaseRecord, GuardrailContext } from './types.js';
+import { RecoveryCaseRecord, GuardrailContext, CaseState } from './types.js';
 import { evaluateGuardrails } from './guardrails.js';
 import { classifyDecline, getRecoveryScorer } from './diagnosis.js';
 import { calculateNextActionTime } from './intervention.js';
-import { generateAgentPlan } from './llm_agent.js';
+import { generateAgentPlan, AgentContext } from './llm_agent.js';
 import { executeRecoveryAction } from './execution.js';
 import { escalateToHuman, closeCase } from './mock_services.js';
 
@@ -36,16 +36,48 @@ export function runAgentLoopForCase(
   let simTime = new Date(event.timestamp);
   let lastActTime: Date | null = null;
 
+  // Initialize standardized case metadata
+  caseRecord.currency = 'INR';
+  caseRecord.customerContext = {
+    segment: customer.segment,
+    ltv: customer.ltv,
+    preferredChannel: customer.whatsappConsent ? 'WhatsApp' : 'SMS',
+    dnd: false,
+    optedOut: customer.optOutStatus
+  };
+  caseRecord.riskContext = {
+    fraudScore: event.fraudScore,
+    declineCode: event.declineCode,
+    riskBand: event.fraudScore > 0.5 ? 'HIGH' : 'NORMAL'
+  };
+  caseRecord.availableActions = [
+    'schedule_payment_retry',
+    'send_recovery_message',
+    'offer_recovery_discount',
+    'escalate_to_human',
+    'close_case'
+  ];
+
   // STEP 1: OBSERVE (Pre-flight check)
-  if (outcome && outcome.resolved && outcome.resolutionTimestamp && outcome.resolutionTimestamp.getTime() <= event.timestamp.getTime()) {
+  caseRecord.currentState = 'OBSERVE';
+  db.saveCase(caseRecord);
+
+  if (
+    outcome &&
+    outcome.resolved &&
+    outcome.resolutionTimestamp &&
+    outcome.resolutionTimestamp.getTime() <= event.timestamp.getTime()
+  ) {
     caseRecord.currentState = 'RESOLVED';
     caseRecord.totalRecoveredAmount = outcome.resolvedAmount;
+    caseRecord.decisionReason = 'Payment confirmed prior to agent intervention. Safe automatic closure.';
     db.saveCase(caseRecord);
     db.addAuditLog(
       caseRecord.caseId,
       'OBSERVE',
       {
         pre_flight_check: 'ALREADY_RESOLVED',
+        decision_reason: caseRecord.decisionReason,
         message: 'Payment resolved prior to agent intervention. Closing case.'
       },
       simTime
@@ -53,18 +85,49 @@ export function runAgentLoopForCase(
     return caseRecord;
   }
 
-  // Main Bounded Agent Loop
-  while (caseRecord.currentState !== 'RESOLVED' && caseRecord.currentState !== 'TERMINATED' && caseRecord.currentState !== 'ESCALATED') {
+  db.addAuditLog(
+    caseRecord.caseId,
+    'OBSERVE',
+    {
+      event_id: event.eventId,
+      event_type: event.eventType,
+      amount: event.amount,
+      currency: 'INR',
+      customer_id: customer.customerId,
+      customer_segment: customer.segment,
+      customer_ltv: customer.ltv,
+      decline_code: event.declineCode,
+      prior_attempts: caseRecord.currentAttempt
+    },
+    simTime
+  );
+
+  // Main Bounded Agent Loop: Max 4 iterations & max 3 attempts
+  while (
+    (caseRecord.currentState as CaseState) !== 'RESOLVED' &&
+    (caseRecord.currentState as CaseState) !== 'TERMINATED' &&
+    (caseRecord.currentState as CaseState) !== 'ESCALATED'
+  ) {
     // Safety circuit breaker check on the loop itself
     if (caseRecord.loopIterations >= caseRecord.maxLoopIterations) {
       caseRecord.currentState = 'ESCALATED';
+      caseRecord.decisionReason = 'Reasoning loop iteration limit reached (circuit breaker triggered). Escalating to human desk.';
       db.saveCase(caseRecord);
-      const escRes = escalateToHuman(caseRecord.caseId, 'Loop iteration limit reached (circuit breaker).');
-      db.addAuditLog(caseRecord.caseId, 'ESCALATE', escRes, simTime);
+      const escRes = escalateToHuman(caseRecord.caseId, 'Loop iteration limit reached (circuit breaker).', 'HIGH');
+      db.addAuditLog(
+        caseRecord.caseId,
+        'ESCALATE',
+        {
+          ...escRes,
+          decision_reason: caseRecord.decisionReason
+        },
+        simTime
+      );
       break;
     }
 
-    // STEP 2: REASON
+    // STEP 2: REASON (ML Likelihood Signal + Root Cause Diagnosis)
+    caseRecord.currentState = 'REASON';
     const declineDiagnosis = classifyDecline(event.declineCode);
     const recoveryProb = scorer.predictProbability(
       customer.segment,
@@ -74,7 +137,8 @@ export function runAgentLoopForCase(
       event.eventType
     );
     caseRecord.recoveryProbability = recoveryProb;
-    caseRecord.currentState = 'DIAGNOSED';
+    const riskBand = recoveryProb >= 0.6 ? 'low' : recoveryProb >= 0.3 ? 'medium' : 'high';
+
     db.saveCase(caseRecord);
 
     db.addAuditLog(
@@ -83,22 +147,74 @@ export function runAgentLoopForCase(
       {
         decline_code: event.declineCode,
         diagnosis: declineDiagnosis,
-        recovery_probability: recoveryProb,
-        model: 'LogisticRegression ML Scorer (time-split)'
+        recovery_signal: {
+          probability: Math.round(recoveryProb * 1000) / 1000,
+          risk_band: riskBand,
+          model_version: 'recovery-v1-logistic-regression'
+        },
+        decision_reason: `ML model estimated recovery probability at ${(recoveryProb * 100).toFixed(1)}% (${riskBand} risk tier) for ${event.declineCode}.`
       },
       simTime
     );
 
-    // STEP 3: PLAN (LLM Autonomous Agent ReAct)
-    const agentContext = {
+    // STEP 3: PLAN (Gemini Autonomous Agent Tool Calling)
+    caseRecord.currentState = 'PLAN';
+    const agentContext: AgentContext = {
+      caseId: caseRecord.caseId,
       declineCode: event.declineCode,
       segment: customer.segment,
       whatsappConsent: customer.whatsappConsent,
+      optOutStatus: customer.optOutStatus,
       eventType: event.eventType,
       amount: event.amount,
-      attemptNumber: caseRecord.currentAttempt + 1
+      currency: 'INR',
+      attemptNumber: caseRecord.currentAttempt + 1,
+      fraudScore: event.fraudScore,
+      retryCooldownHours: event.retryCooldownHours,
+      previousActions: caseRecord.previousActions || [],
+      lastToolResult: caseRecord.lastToolResult,
+      policyState: {
+        cooldownActive: lastActTime ? (simTime.getTime() - lastActTime.getTime() < event.retryCooldownHours * 3600 * 1000) : false,
+        retryLimitRemaining: Math.max(0, caseRecord.maxAttempts - caseRecord.currentAttempt),
+        contactLimitRemaining: Math.max(0, caseRecord.maxAttempts - caseRecord.currentAttempt)
+      }
     };
+
     const llmProposal = generateAgentPlan(agentContext, recoveryProb);
+    caseRecord.decisionReason = llmProposal.decisionReason;
+
+    // Handle immediate direct tool outcomes like escalate_to_human or close_case
+    if (llmProposal.toolName === 'close_case') {
+      caseRecord.currentState = 'TERMINATED';
+      db.saveCase(caseRecord);
+      const closeInfo = closeCase(caseRecord.caseId, 'TERMINATED', 0.0, llmProposal.decisionReason);
+      db.addAuditLog(
+        caseRecord.caseId,
+        'CLOSE',
+        {
+          ...closeInfo,
+          decision_reason: llmProposal.decisionReason
+        },
+        simTime
+      );
+      break;
+    }
+
+    if (llmProposal.toolName === 'escalate_to_human') {
+      caseRecord.currentState = 'ESCALATED';
+      db.saveCase(caseRecord);
+      const escInfo = escalateToHuman(caseRecord.caseId, llmProposal.decisionReason, 'HIGH');
+      db.addAuditLog(
+        caseRecord.caseId,
+        'ESCALATE',
+        {
+          ...escInfo,
+          decision_reason: llmProposal.decisionReason
+        },
+        simTime
+      );
+      break;
+    }
 
     const nextActionTime = calculateNextActionTime(
       simTime,
@@ -109,19 +225,19 @@ export function runAgentLoopForCase(
     const actionPlan = {
       channel: llmProposal.toolArgs.channel,
       actionTime: nextActionTime,
-      actionType: llmProposal.toolArgs.actionType,
+      actionType: llmProposal.toolArgs.actionType as any,
       templateKey: llmProposal.toolArgs.templateKey,
+      templateId: llmProposal.toolArgs.templateKey,
       discountPct: llmProposal.toolArgs.discountPct
     };
 
-    caseRecord.currentState = 'SCHEDULED';
     db.saveCase(caseRecord);
 
     db.addAuditLog(
       caseRecord.caseId,
       'PLAN',
       {
-        llm_thought: llmProposal.thought,
+        decision_reason: llmProposal.decisionReason,
         proposed_tool: llmProposal.toolName,
         channel: actionPlan.channel,
         action_type: actionPlan.actionType,
@@ -132,7 +248,8 @@ export function runAgentLoopForCase(
       simTime
     );
 
-    // STEP 4: GUARDRAIL_CHECK (LLM Proposes, Guardrail Disposes)
+    // STEP 4: GUARDRAIL_CHECK (LLM Proposes, Deterministic Guardrail Disposes)
+    caseRecord.currentState = 'GUARDRAIL_CHECK';
     let finalActionPlan = actionPlan;
     let finalProposal = llmProposal;
 
@@ -151,6 +268,11 @@ export function runAgentLoopForCase(
     };
 
     let decision = evaluateGuardrails(gCtx);
+    caseRecord.guardrailState = {
+      lastCheckPassed: decision.passed,
+      violatedRule: decision.violatedRule,
+      rejectionReason: decision.reason
+    };
 
     db.addAuditLog(
       caseRecord.caseId,
@@ -169,8 +291,9 @@ export function runAgentLoopForCase(
     if (!decision.passed && !caseRecord.isControlGroup) {
       if (decision.status === 'TERMINATE') {
         caseRecord.currentState = 'TERMINATED';
+        caseRecord.decisionReason = `Case terminated by guardrail rule ${decision.violatedRule}: ${decision.reason}`;
         db.saveCase(caseRecord);
-        const closeInfo = closeCase(caseRecord.caseId, 'TERMINATED', 0.0);
+        const closeInfo = closeCase(caseRecord.caseId, 'TERMINATED', 0.0, caseRecord.decisionReason);
         db.addAuditLog(caseRecord.caseId, 'CLOSE', closeInfo, simTime);
         break;
       }
@@ -181,12 +304,14 @@ export function runAgentLoopForCase(
         {
           rejected_plan: finalProposal.toolName,
           rejected_channel: finalActionPlan.channel,
+          violated_rule: decision.violatedRule,
           rejection_reason: decision.reason,
-          action: 'Invoking LLM Replan Loop with guardrail rejection feedback'
+          action: 'Invoking Gemini Replan with structured rejection feedback'
         },
         simTime
       );
 
+      // Replan with structured guardrail feedback
       const replanProposal = generateAgentPlan(agentContext, recoveryProb, decision.reason);
       const replanActionTime = calculateNextActionTime(
         simTime,
@@ -197,8 +322,9 @@ export function runAgentLoopForCase(
       const replanActionPlan = {
         channel: replanProposal.toolArgs.channel,
         actionTime: replanActionTime,
-        actionType: replanProposal.toolArgs.actionType,
+        actionType: replanProposal.toolArgs.actionType as any,
         templateKey: replanProposal.toolArgs.templateKey,
+        templateId: replanProposal.toolArgs.templateKey,
         discountPct: replanProposal.toolArgs.discountPct
       };
 
@@ -206,7 +332,7 @@ export function runAgentLoopForCase(
         caseRecord.caseId,
         'REPLAN',
         {
-          llm_thought: replanProposal.thought,
+          decision_reason: replanProposal.decisionReason,
           proposed_tool: replanProposal.toolName,
           channel: replanActionPlan.channel,
           action_type: replanActionPlan.actionType,
@@ -246,23 +372,25 @@ export function runAgentLoopForCase(
       } else {
         if (replanDecision.status === 'TERMINATE') {
           caseRecord.currentState = 'TERMINATED';
+          caseRecord.decisionReason = `Replan terminated: ${replanDecision.reason}`;
           db.saveCase(caseRecord);
-          const closeInfo = closeCase(caseRecord.caseId, 'TERMINATED', 0.0);
+          const closeInfo = closeCase(caseRecord.caseId, 'TERMINATED', 0.0, caseRecord.decisionReason);
           db.addAuditLog(caseRecord.caseId, 'CLOSE', closeInfo, simTime);
           break;
         } else {
           caseRecord.currentState = 'ESCALATED';
+          caseRecord.decisionReason = `Replan exhausted safe alternatives: ${replanDecision.reason}`;
           db.saveCase(caseRecord);
-          const escInfo = escalateToHuman(caseRecord.caseId, `Replan failed: ${replanDecision.reason}`);
+          const escInfo = escalateToHuman(caseRecord.caseId, `Replan failed: ${replanDecision.reason}`, 'HIGH');
           db.addAuditLog(caseRecord.caseId, 'ESCALATE', escInfo, simTime);
           break;
         }
       }
     } else if (!decision.passed && caseRecord.isControlGroup) {
-      // Control group holdout baseline
+      // Control group holdout baseline (Rule 7)
     }
 
-    // STEP 5: ACT (Skipped for control group)
+    // STEP 5: ACT (Execute Bounded Tool via Simulator)
     if (!caseRecord.isControlGroup) {
       const custName = `Customer ${customer.customerId.split('_').slice(-1)[0] || 'User'}`;
       executeRecoveryAction(
@@ -277,40 +405,50 @@ export function runAgentLoopForCase(
       simTime = new Date(finalActionPlan.actionTime.getTime() + 2 * 3600 * 1000);
     } else {
       caseRecord.loopIterations += 1;
+      caseRecord.currentState = 'ACT';
       db.saveCase(caseRecord);
       simTime = new Date(simTime.getTime() + 2 * 3600 * 1000);
     }
 
     // STEP 6: OBSERVE_OUTCOME
+    caseRecord.currentState = 'OBSERVE_OUTCOME';
     const isResolved = outcome ? outcome.resolved : false;
 
     if (isResolved) {
       caseRecord.currentState = 'RESOLVED';
       caseRecord.totalRecoveredAmount = outcome ? outcome.resolvedAmount : event.amount;
+      caseRecord.decisionReason = `Revenue of ₹${caseRecord.totalRecoveredAmount.toLocaleString('en-IN')} successfully recovered via ${outcome?.resolutionChannel || finalActionPlan.channel}. Case resolved.`;
       db.saveCase(caseRecord);
-      const closeInfo = closeCase(caseRecord.caseId, 'RESOLVED', caseRecord.totalRecoveredAmount);
+      const closeInfo = closeCase(caseRecord.caseId, 'RESOLVED', caseRecord.totalRecoveredAmount, caseRecord.decisionReason);
       db.addAuditLog(
         caseRecord.caseId,
         'OBSERVE_OUTCOME',
         {
           outcome: 'RESOLVED',
+          decision_reason: caseRecord.decisionReason,
           recovered_amount: caseRecord.totalRecoveredAmount,
-          resolution_channel: outcome?.resolutionChannel || actionPlan.channel
+          resolution_channel: outcome?.resolutionChannel || finalActionPlan.channel
         },
         simTime
       );
       db.addAuditLog(caseRecord.caseId, 'CLOSE', closeInfo, simTime);
       break;
     } else {
+      // STEP 7: DECIDE_NEXT
+      caseRecord.currentState = 'DECIDE_NEXT';
       if (caseRecord.currentAttempt >= caseRecord.maxAttempts || caseRecord.isControlGroup) {
         caseRecord.currentState = 'TERMINATED';
+        caseRecord.decisionReason = caseRecord.isControlGroup
+          ? 'Control group holdout baseline completed (unintervened comparison).'
+          : `Maximum retry attempts exhausted (${caseRecord.currentAttempt}/${caseRecord.maxAttempts}). Safely stopping intervention to protect customer goodwill.`;
         db.saveCase(caseRecord);
-        const closeInfo = closeCase(caseRecord.caseId, 'TERMINATED', 0.0);
+        const closeInfo = closeCase(caseRecord.caseId, 'TERMINATED', 0.0, caseRecord.decisionReason);
         db.addAuditLog(
           caseRecord.caseId,
           'OBSERVE_OUTCOME',
           {
             outcome: 'UNRESOLVED',
+            decision_reason: caseRecord.decisionReason,
             status: 'Attempts exhausted or control baseline recorded'
           },
           simTime
@@ -324,7 +462,7 @@ export function runAgentLoopForCase(
           {
             outcome: 'UNRESOLVED',
             attempts_used: caseRecord.currentAttempt,
-            action: 'Looping back for next retry attempt'
+            decision_reason: `Attempt ${caseRecord.currentAttempt} did not immediately settle. Looping back to Gemini with tool outcome for adaptive next-action selection.`
           },
           simTime
         );
