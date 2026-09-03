@@ -28,6 +28,8 @@ class GuardrailContext:
     last_act_timestamp: Optional[datetime] = None
     channel: Optional[str] = None
     proposed_action_time: Optional[datetime] = None
+    whatsapp_consent: bool = True
+    discount_pct: float = 0.0
 
 
 @dataclass
@@ -128,10 +130,28 @@ def evaluate_guardrails(ctx: GuardrailContext) -> GuardrailDecision:
             reason="Case is assigned to control group. Active interventions blocked for A/B holdout."
         )
 
-    # Passed all 7 rules
+    # Rule 8: Unsolicited WhatsApp Consent Check
+    if ctx.channel == "WhatsApp" and ctx.whatsapp_consent is False:
+        return GuardrailDecision(
+            passed=False,
+            status="BLOCK_ACT",
+            violated_rule=8,
+            reason="WhatsApp outreach prohibited without verified customer opt-in consent."
+        )
+
+    # Rule 9: Margin Protection Discount Cap
+    if ctx.discount_pct > 20.0:
+        return GuardrailDecision(
+            passed=False,
+            status="BLOCK_ACT",
+            violated_rule=9,
+            reason=f"Proposed discount ({ctx.discount_pct}%) exceeds approved margin cap of 20.0%."
+        )
+
+    # Passed all compliance guardrails
     return GuardrailDecision(
         passed=True,
         status="PROCEED",
         violated_rule=None,
-        reason="All 7 compliance guardrails passed."
+        reason="All compliance guardrails passed."
     )

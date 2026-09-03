@@ -1,6 +1,6 @@
 import { Database } from './models.js';
 import { RecoveryCaseRecord, InterventionStrategy } from './types.js';
-import { scheduleRetry, sendMessage, offerDiscount, CHANNEL_COSTS } from './mock_services.js';
+import { scheduleRetry, sendMessage, offerDiscount, logPromiseToPay, CHANNEL_COSTS } from './mock_services.js';
 import { renderMessage } from './intervention.js';
 
 export function executeRecoveryAction(
@@ -30,7 +30,8 @@ export function executeRecoveryAction(
     retry_time: retryTimeStr,
     event_id: caseRecord.eventId,
     discount_pct: Math.floor(discountPct),
-    coupon_code: discountPct > 0 ? `RECOVER${Math.floor(discountPct)}` : ''
+    coupon_code: discountPct > 0 ? `RECOVER${Math.floor(discountPct)}` : '',
+    ptp_date: actionPlan.ptpDate || 'agreed date'
   };
   const renderedBody = renderMessage(templateKey, messageVars);
 
@@ -42,6 +43,15 @@ export function executeRecoveryAction(
   } else if (actionType === 'SCHEDULE_RETRY') {
     toolResult.retry = scheduleRetry(caseRecord.caseId, actionPlan.actionTime, 2);
     toolResult.message = sendMessage(caseRecord.caseId, channel, templateId, messageVars, costPerSend);
+  } else if (actionType === 'LOG_PROMISE_TO_PAY') {
+    const ptpDate = actionPlan.ptpDate || new Date(currentSimTime.getTime() + 48 * 3600 * 1000).toISOString().slice(0, 10);
+    toolResult.ptp = logPromiseToPay(caseRecord.caseId, ptpDate, eventAmount);
+    toolResult.message = sendMessage(caseRecord.caseId, channel, templateId, messageVars, costPerSend);
+    caseRecord.invoiceContext = {
+      ...(caseRecord.invoiceContext || {}),
+      ptpDate,
+      ptpStatus: 'LOGGED'
+    };
   } else {
     toolResult.message = sendMessage(caseRecord.caseId, channel, templateId, messageVars, costPerSend);
   }
@@ -62,7 +72,7 @@ export function executeRecoveryAction(
     channel,
     timestamp: currentSimTime.toISOString(),
     resultStatus: 'EXECUTED',
-    toolCallId: toolResult.retry?.retry_id || toolResult.message?.message_id || toolResult.discount?.coupon_id
+    toolCallId: toolResult.ptp?.ptp_id || toolResult.retry?.retry_id || toolResult.message?.message_id || toolResult.discount?.coupon_id
   });
 
   db.saveCase(caseRecord);

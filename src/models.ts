@@ -110,6 +110,39 @@ export class Database {
     this.cases.set(caseRecord.caseId, caseRecord);
   }
 
+  createCase(eventId: string, customerId: string, isControlGroup: boolean = false): RecoveryCaseRecord {
+    const caseId = `case_${crypto.randomUUID().substring(0, 8)}`;
+    const newCase: RecoveryCaseRecord = {
+      caseId,
+      eventId,
+      customerId,
+      isControlGroup,
+      currentState: 'OBSERVE',
+      currentAttempt: 0,
+      maxAttempts: 3,
+      loopIterations: 0,
+      maxLoopIterations: 5,
+      totalCostIncurred: 0,
+      totalRecoveredAmount: 0,
+      recoveryProbability: null,
+      lastActTimestamp: null,
+      nextActionTime: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      previousActions: [],
+      availableActions: [
+        'schedule_payment_retry',
+        'send_recovery_message',
+        'offer_recovery_discount',
+        'log_promise_to_pay',
+        'escalate_to_human',
+        'close_case'
+      ]
+    };
+    this.cases.set(caseId, newCase);
+    return newCase;
+  }
+
   getEvent(eventId: string): EventRecord | undefined {
     return this.events.get(eventId);
   }
@@ -122,8 +155,16 @@ export class Database {
     return this.customers.get(customerId);
   }
 
+  saveCustomer(customerRecord: Customer) {
+    this.customers.set(customerRecord.customerId, customerRecord);
+  }
+
   getOutcome(eventId: string): OutcomeRecord | undefined {
     return this.outcomes.get(eventId);
+  }
+
+  saveOutcome(outcomeRecord: OutcomeRecord) {
+    this.outcomes.set(outcomeRecord.eventId, outcomeRecord);
   }
 
   getChannelCost(channel: string): ChannelCostRecord | undefined {

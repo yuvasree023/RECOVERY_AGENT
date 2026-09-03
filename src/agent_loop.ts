@@ -54,9 +54,19 @@ export function runAgentLoopForCase(
     'schedule_payment_retry',
     'send_recovery_message',
     'offer_recovery_discount',
+    'log_promise_to_pay',
     'escalate_to_human',
     'close_case'
   ];
+  caseRecord.invoiceContext = {
+    invoiceNumber: event.invoiceNumber || `INV-${event.eventId.slice(-6)}`,
+    companyName: event.companyName || `Account_${customer.customerId}`,
+    dueDate: event.dueDate || new Date(event.timestamp.getTime() - 15 * 86400000).toISOString().slice(0, 10),
+    daysOverdue: event.daysOverdue || Math.max(1, Math.floor((simTime.getTime() - event.timestamp.getTime()) / 86400000) + 15),
+    ptpDate: event.ptpDate,
+    ptpStatus: event.ptpDate ? 'LOGGED' : 'NONE',
+    previousReminders: Math.max(0, caseRecord.currentAttempt - 1)
+  };
 
   // STEP 1: OBSERVE (Pre-flight check)
   caseRecord.currentState = 'OBSERVE';
@@ -171,6 +181,8 @@ export function runAgentLoopForCase(
       attemptNumber: caseRecord.currentAttempt + 1,
       fraudScore: event.fraudScore,
       retryCooldownHours: event.retryCooldownHours,
+      ptpDate: event.ptpDate || caseRecord.invoiceContext?.ptpDate,
+      invoiceContext: caseRecord.invoiceContext,
       previousActions: caseRecord.previousActions || [],
       lastToolResult: caseRecord.lastToolResult,
       policyState: {
@@ -182,39 +194,6 @@ export function runAgentLoopForCase(
 
     const llmProposal = generateAgentPlan(agentContext, recoveryProb);
     caseRecord.decisionReason = llmProposal.decisionReason;
-
-    // Handle immediate direct tool outcomes like escalate_to_human or close_case
-    if (llmProposal.toolName === 'close_case') {
-      caseRecord.currentState = 'TERMINATED';
-      db.saveCase(caseRecord);
-      const closeInfo = closeCase(caseRecord.caseId, 'TERMINATED', 0.0, llmProposal.decisionReason);
-      db.addAuditLog(
-        caseRecord.caseId,
-        'CLOSE',
-        {
-          ...closeInfo,
-          decision_reason: llmProposal.decisionReason
-        },
-        simTime
-      );
-      break;
-    }
-
-    if (llmProposal.toolName === 'escalate_to_human') {
-      caseRecord.currentState = 'ESCALATED';
-      db.saveCase(caseRecord);
-      const escInfo = escalateToHuman(caseRecord.caseId, llmProposal.decisionReason, 'HIGH');
-      db.addAuditLog(
-        caseRecord.caseId,
-        'ESCALATE',
-        {
-          ...escInfo,
-          decision_reason: llmProposal.decisionReason
-        },
-        simTime
-      );
-      break;
-    }
 
     const nextActionTime = calculateNextActionTime(
       simTime,
@@ -228,7 +207,8 @@ export function runAgentLoopForCase(
       actionType: llmProposal.toolArgs.actionType as any,
       templateKey: llmProposal.toolArgs.templateKey,
       templateId: llmProposal.toolArgs.templateKey,
-      discountPct: llmProposal.toolArgs.discountPct
+      discountPct: llmProposal.toolArgs.discountPct,
+      ptpDate: llmProposal.toolArgs.ptpDate
     };
 
     db.saveCase(caseRecord);
@@ -264,7 +244,9 @@ export function runAgentLoopForCase(
       isControlGroup: caseRecord.isControlGroup,
       lastActTimestamp: lastActTime,
       channel: finalActionPlan.channel,
-      proposedActionTime: finalActionPlan.actionTime
+      proposedActionTime: finalActionPlan.actionTime,
+      whatsappConsent: customer.whatsappConsent,
+      discountPct: finalActionPlan.discountPct
     };
 
     let decision = evaluateGuardrails(gCtx);
@@ -298,6 +280,15 @@ export function runAgentLoopForCase(
         break;
       }
 
+      if (decision.status === 'ESCALATE') {
+        caseRecord.currentState = 'ESCALATED';
+        caseRecord.decisionReason = `Case escalated by guardrail rule ${decision.violatedRule}: ${decision.reason}`;
+        db.saveCase(caseRecord);
+        const escInfo = escalateToHuman(caseRecord.caseId, caseRecord.decisionReason, 'HIGH');
+        db.addAuditLog(caseRecord.caseId, 'ESCALATE', escInfo, simTime);
+        break;
+      }
+
       db.addAuditLog(
         caseRecord.caseId,
         'GUARDRAIL_FAIL',
@@ -325,7 +316,8 @@ export function runAgentLoopForCase(
         actionType: replanProposal.toolArgs.actionType as any,
         templateKey: replanProposal.toolArgs.templateKey,
         templateId: replanProposal.toolArgs.templateKey,
-        discountPct: replanProposal.toolArgs.discountPct
+        discountPct: replanProposal.toolArgs.discountPct,
+        ptpDate: replanProposal.toolArgs.ptpDate
       };
 
       db.addAuditLog(
@@ -392,6 +384,38 @@ export function runAgentLoopForCase(
 
     // STEP 5: ACT (Execute Bounded Tool via Simulator)
     if (!caseRecord.isControlGroup) {
+      if (finalProposal.toolName === 'close_case') {
+        caseRecord.currentState = 'TERMINATED';
+        db.saveCase(caseRecord);
+        const closeInfo = closeCase(caseRecord.caseId, 'TERMINATED', 0.0, finalProposal.decisionReason);
+        db.addAuditLog(
+          caseRecord.caseId,
+          'CLOSE',
+          {
+            ...closeInfo,
+            decision_reason: finalProposal.decisionReason
+          },
+          simTime
+        );
+        break;
+      }
+
+      if (finalProposal.toolName === 'escalate_to_human') {
+        caseRecord.currentState = 'ESCALATED';
+        db.saveCase(caseRecord);
+        const escInfo = escalateToHuman(caseRecord.caseId, finalProposal.decisionReason, 'HIGH');
+        db.addAuditLog(
+          caseRecord.caseId,
+          'ESCALATE',
+          {
+            ...escInfo,
+            decision_reason: finalProposal.decisionReason
+          },
+          simTime
+        );
+        break;
+      }
+
       const custName = `Customer ${customer.customerId.split('_').slice(-1)[0] || 'User'}`;
       executeRecoveryAction(
         db,
@@ -417,7 +441,12 @@ export function runAgentLoopForCase(
     if (isResolved) {
       caseRecord.currentState = 'RESOLVED';
       caseRecord.totalRecoveredAmount = outcome ? outcome.resolvedAmount : event.amount;
-      caseRecord.decisionReason = `Revenue of ₹${caseRecord.totalRecoveredAmount.toLocaleString('en-IN')} successfully recovered via ${outcome?.resolutionChannel || finalActionPlan.channel}. Case resolved.`;
+      if (caseRecord.invoiceContext?.ptpDate) {
+        caseRecord.invoiceContext.ptpStatus = 'FULFILLED';
+        caseRecord.decisionReason = `Promise-to-Pay fulfilled! Outstanding commercial invoice of ₹${caseRecord.totalRecoveredAmount.toLocaleString('en-IN')} paid in full on or before agreed date (${caseRecord.invoiceContext.ptpDate}).`;
+      } else {
+        caseRecord.decisionReason = `Revenue of ₹${caseRecord.totalRecoveredAmount.toLocaleString('en-IN')} successfully recovered via ${outcome?.resolutionChannel || finalActionPlan.channel}. Case resolved.`;
+      }
       db.saveCase(caseRecord);
       const closeInfo = closeCase(caseRecord.caseId, 'RESOLVED', caseRecord.totalRecoveredAmount, caseRecord.decisionReason);
       db.addAuditLog(
@@ -427,7 +456,8 @@ export function runAgentLoopForCase(
           outcome: 'RESOLVED',
           decision_reason: caseRecord.decisionReason,
           recovered_amount: caseRecord.totalRecoveredAmount,
-          resolution_channel: outcome?.resolutionChannel || finalActionPlan.channel
+          resolution_channel: outcome?.resolutionChannel || finalActionPlan.channel,
+          ptp_status: caseRecord.invoiceContext?.ptpStatus
         },
         simTime
       );
@@ -436,6 +466,9 @@ export function runAgentLoopForCase(
     } else {
       // STEP 7: DECIDE_NEXT
       caseRecord.currentState = 'DECIDE_NEXT';
+      if (caseRecord.invoiceContext?.ptpDate && caseRecord.invoiceContext.ptpStatus === 'LOGGED') {
+        caseRecord.invoiceContext.ptpStatus = 'BROKEN';
+      }
       if (caseRecord.currentAttempt >= caseRecord.maxAttempts || caseRecord.isControlGroup) {
         caseRecord.currentState = 'TERMINATED';
         caseRecord.decisionReason = caseRecord.isControlGroup

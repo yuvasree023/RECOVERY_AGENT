@@ -21,6 +21,18 @@ export const TEMPLATES: Record<string, { templateId: string; text: string }> = {
   CART_REMINDER: {
     templateId: 'TPL_CART_REM_01',
     text: 'Hi {customer_name}, your items worth INR {amount} are waiting in your cart. Finish your checkout here: https://rzp.io/cart/{event_id}'
+  },
+  INVOICE_OVERDUE: {
+    templateId: 'TPL_INV_OVERDUE_01',
+    text: 'Dear {customer_name}, invoice for INR {amount} is past due. Review your statement and settle online securely: https://rzp.io/inv/{event_id}'
+  },
+  INVOICE_PTP_CONFIRMATION: {
+    templateId: 'TPL_INV_PTP_01',
+    text: 'Dear {customer_name}, this confirms your commitment to settle INR {amount} on {ptp_date}. Automated reminders are paused until then. Settlement portal: https://rzp.io/inv/{event_id}'
+  },
+  INVOICE_FINAL_NOTICE: {
+    templateId: 'TPL_INV_FINAL_01',
+    text: 'URGENT: Dear {customer_name}, invoice for INR {amount} remains unsettled after multiple notices. Please clear the outstanding balance immediately to avoid credit hold: https://rzp.io/inv/{event_id}'
   }
 };
 

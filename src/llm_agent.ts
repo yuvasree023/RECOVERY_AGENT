@@ -22,10 +22,11 @@ export interface LLMProposal {
   toolArgs: {
     channel: string;
     templateKey: string;
-    actionType: 'SCHEDULE_RETRY' | 'SEND_MESSAGE' | 'OFFER_DISCOUNT' | 'ESCALATE' | 'CLOSE' | 'CHECK_STATUS';
+    actionType: 'SCHEDULE_RETRY' | 'SEND_MESSAGE' | 'OFFER_DISCOUNT' | 'ESCALATE' | 'CLOSE' | 'CHECK_STATUS' | 'LOG_PROMISE_TO_PAY';
     discountPct: number;
     reason?: string;
     priority?: 'HIGH' | 'MEDIUM' | 'LOW';
+    ptpDate?: string;
   };
 }
 
@@ -41,6 +42,16 @@ export interface AgentContext {
   attemptNumber: number;
   fraudScore?: number;
   retryCooldownHours?: number;
+  ptpDate?: string | null;
+  invoiceContext?: {
+    invoiceNumber?: string;
+    dueDate?: string;
+    daysOverdue?: number;
+    companyName?: string;
+    previousReminders?: number;
+    ptpDate?: string | null;
+    ptpStatus?: 'NONE' | 'LOGGED' | 'FULFILLED' | 'BROKEN';
+  };
   previousActions?: any[];
   lastToolResult?: any;
   policyState?: {
@@ -156,6 +167,29 @@ export const RECOVERY_TOOLS = [
         }
       },
       required: ['resolution_status', 'reason']
+    }
+  },
+  {
+    name: 'log_promise_to_pay',
+    description: 'Record customer commitment to pay overdue invoice by an agreed date, pausing active recovery dunning.',
+    parameters: {
+      type: 'object',
+      properties: {
+        ptp_date: {
+          type: 'string',
+          description: 'Agreed payment date in YYYY-MM-DD format.'
+        },
+        channel: {
+          type: 'string',
+          enum: ['Email', 'WhatsApp', 'SMS'],
+          description: 'Channel to send written confirmation of payment commitment.'
+        },
+        notes: {
+          type: 'string',
+          description: 'Summary of agreed commitment terms.'
+        }
+      },
+      required: ['ptp_date']
     }
   }
 ];
@@ -388,7 +422,84 @@ export function generateAgentPlan(
     };
   }
 
-  // 10. Default Adaptive Recovery Strategy
+  // 10. B2B Overdue Invoice & Promise-to-Pay (PTP) Playbook
+  if (
+    eventType === 'INVOICE_OVERDUE' ||
+    eventType === 'B2B_INVOICE' ||
+    declineCode === 'OVERDUE_RECEIVABLE' ||
+    declineCode === 'DISPUTED_INVOICE'
+  ) {
+    const channel = segment === 'High' && whatsappConsent ? 'WhatsApp' : 'Email';
+    const ptpDate = context.ptpDate || context.invoiceContext?.ptpDate;
+    const ptpStatus = context.invoiceContext?.ptpStatus;
+    const company = context.invoiceContext?.companyName || `Account ${context.caseId?.slice(-4) || 'Corp'}`;
+
+    // 10a. Billing dispute requires human accounts receivable intervention
+    if (declineCode === 'DISPUTED_INVOICE') {
+      return {
+        decisionReason: `Commercial invoice billing dispute flagged for ${company}. Halting automated outreach and routing directly to Accounts Receivable dispute desk.`,
+        toolName: 'escalate_to_human',
+        toolArgs: {
+          channel: 'Email',
+          templateKey: 'INVOICE_OVERDUE',
+          actionType: 'ESCALATE',
+          discountPct: 0.0,
+          reason: `Billing dispute on invoice for ${company}`,
+          priority: 'HIGH'
+        }
+      };
+    }
+
+    // 10b. Customer committed to a Promise-to-Pay (PTP) date
+    if (ptpDate && ptpStatus !== 'BROKEN') {
+      return {
+        decisionReason: `Customer committed to settle overdue invoice on ${ptpDate}. Logging formal Promise-to-Pay (PTP) commitment and pausing dunning notices.`,
+        toolName: 'log_promise_to_pay',
+        toolArgs: {
+          channel,
+          templateKey: 'INVOICE_PTP_CONFIRMATION',
+          actionType: 'LOG_PROMISE_TO_PAY',
+          discountPct: 0.0,
+          ptpDate,
+          reason: `Customer promised payment on ${ptpDate}`
+        }
+      };
+    }
+
+    // 10c. Broken PTP or repeated delinquency
+    if (ptpStatus === 'BROKEN' || attemptNumber >= 3) {
+      return {
+        decisionReason: `Invoice remains unpaid after previous reminders (${attemptNumber} notices sent). Escalating to VIP Credit Controller for credit hold review.`,
+        toolName: 'escalate_to_human',
+        toolArgs: {
+          channel: 'Email',
+          templateKey: 'INVOICE_FINAL_NOTICE',
+          actionType: 'ESCALATE',
+          discountPct: 0.0,
+          reason: `Repeated invoice non-payment (${attemptNumber} notices sent)`,
+          priority: 'HIGH'
+        }
+      };
+    }
+
+    // 10d. Professional statement reminder
+    const isUrgent = attemptNumber >= 2;
+    const tpl = isUrgent ? 'INVOICE_FINAL_NOTICE' : 'INVOICE_OVERDUE';
+    return {
+      decisionReason: isUrgent
+        ? `Overdue B2B receivable notice 2 for ${company}. Issuing formal statement with direct payment portal link.`
+        : `New overdue B2B invoice identified for ${company}. Dispatching a professional account statement and direct payment link via ${channel}.`,
+      toolName: 'send_recovery_message',
+      toolArgs: {
+        channel,
+        templateKey: tpl,
+        actionType: 'SEND_MESSAGE',
+        discountPct: 0.0
+      }
+    };
+  }
+
+  // 11. Default Adaptive Recovery Strategy
   const channel = segment === 'High' && whatsappConsent ? 'WhatsApp' : 'Email';
   return {
     decisionReason: `Detected ${eventType} with code ${declineCode}. Recovery likelihood signal is ${(recoveryProb * 100).toFixed(1)}%. Initiating recovery workflow via ${channel}.`,

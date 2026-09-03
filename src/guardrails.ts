@@ -91,11 +91,31 @@ export function evaluateGuardrails(ctx: GuardrailContext): GuardrailDecision {
     };
   }
 
-  // All 7 rules passed
+  // Rule 8: Unsolicited WhatsApp Consent Check
+  if (ctx.channel === 'WhatsApp' && ctx.whatsappConsent === false) {
+    return {
+      passed: false,
+      status: 'BLOCK_ACT',
+      violatedRule: 8,
+      reason: 'WhatsApp outreach prohibited without verified customer opt-in consent.'
+    };
+  }
+
+  // Rule 9: Margin Protection Discount Cap
+  if (ctx.discountPct !== undefined && ctx.discountPct > 20.0) {
+    return {
+      passed: false,
+      status: 'BLOCK_ACT',
+      violatedRule: 9,
+      reason: `Proposed discount (${ctx.discountPct}%) exceeds approved margin cap of 20.0%.`
+    };
+  }
+
+  // All rules passed
   return {
     passed: true,
     status: 'PROCEED',
     violatedRule: null,
-    reason: 'All 7 guardrails passed.'
+    reason: 'All compliance guardrails passed.'
   };
 }

@@ -169,3 +169,50 @@ export function checkCheckoutStatus(caseId: string, isConverted: boolean = false
   };
 }
 
+/**
+ * B2B Promise-to-Pay (PTP) Commitment Logger Tool (Production API Surface)
+ * Records commercial payment commitment, temporarily pausing aggressive dunning.
+ */
+export function logPromiseToPay(
+  caseId: string,
+  ptpDate: string,
+  agreedAmount?: number,
+  notes?: string
+) {
+  const ptpId = `PTP-${crypto.randomUUID().substring(0, 6).toUpperCase()}`;
+  return {
+    status: 'PTP_RECORDED',
+    ptp_id: ptpId,
+    case_id: caseId,
+    promised_date: ptpDate,
+    agreed_amount: agreedAmount || 0,
+    dunning_paused: true,
+    notes: notes || 'Customer committed to settle invoice by promised date.',
+    timestamp: new Date().toISOString(),
+    is_simulation: true
+  };
+}
+
+/**
+ * B2B Invoice Receivable Inspector Tool (Production API Surface)
+ */
+export function checkInvoiceStatus(
+  caseId: string,
+  invoiceId?: string,
+  isPaid: boolean = false,
+  amount: number = 0,
+  ptpDate?: string | null
+) {
+  return {
+    case_id: caseId,
+    invoice_id: invoiceId || `INV-${caseId.slice(-6)}`,
+    status: isPaid ? 'PAID' : 'OVERDUE',
+    settled_amount: isPaid ? amount : 0,
+    ptp_status: ptpDate ? 'ACTIVE_COMMITMENT' : 'NONE',
+    promised_date: ptpDate || null,
+    last_verified_at: new Date().toISOString(),
+    is_simulation: true
+  };
+}
+
+

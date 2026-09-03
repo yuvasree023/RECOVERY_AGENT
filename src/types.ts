@@ -9,15 +9,21 @@ export interface Customer {
 export interface EventRecord {
   eventId: string;
   customerId: string;
-  eventType: string; // 'UPI_PAYMENT_FAIL' | 'CART_ABANDON' | 'SUBSCRIPTION_FAIL'
+  eventType: string; // 'UPI_PAYMENT_FAIL' | 'CART_ABANDON' | 'SUBSCRIPTION_FAIL' | 'INVOICE_OVERDUE' | 'B2B_INVOICE'
   amount: number;
-  status: string; // 'FAILED' | 'DROPPED'
+  status: string; // 'FAILED' | 'DROPPED' | 'OVERDUE'
   timestamp: Date;
-  declineCode: string; // 'NETWORK_TIMEOUT' | 'INSUFFICIENT_FUNDS' | 'CARD_EXPIRED' | 'HIGH_SHIPPING_COST'
+  declineCode: string; // 'NETWORK_TIMEOUT' | 'INSUFFICIENT_FUNDS' | 'CARD_EXPIRED' | 'HIGH_SHIPPING_COST' | 'OVERDUE_RECEIVABLE' | 'DISPUTED_INVOICE'
   attemptNumber: number;
   fraudScore: number;
   retryCooldownHours: number;
   ptpDate: string | null;
+  // B2B Overdue Invoice Fields
+  invoiceNumber?: string;
+  dueDate?: string;
+  daysOverdue?: number;
+  companyName?: string;
+  previousReminders?: number;
 }
 
 export interface OutcomeRecord {
@@ -100,6 +106,16 @@ export interface RecoveryCaseRecord {
   contactCount?: number;
   escalationStatus?: string | null;
   decisionReason?: string | null;
+  invoiceContext?: {
+    invoiceNumber?: string;
+    companyName?: string;
+    dueDate?: string;
+    daysOverdue?: number;
+    ptpDate?: string | null;
+    ptpStatus?: 'NONE' | 'LOGGED' | 'FULFILLED' | 'BROKEN';
+    previousReminders?: number;
+  };
+  lastActTimestamp?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -137,6 +153,8 @@ export interface GuardrailContext {
   lastActTimestamp: Date | null;
   channel: string | null;
   proposedActionTime: Date | null;
+  whatsappConsent?: boolean;
+  discountPct?: number;
 }
 
 export interface GuardrailDecision {
@@ -156,10 +174,11 @@ export interface DeclineDiagnosis {
 export interface InterventionStrategy {
   channel: string;
   actionTime: Date;
-  actionType: 'SCHEDULE_RETRY' | 'SEND_MESSAGE' | 'OFFER_DISCOUNT';
+  actionType: 'SCHEDULE_RETRY' | 'SEND_MESSAGE' | 'OFFER_DISCOUNT' | 'LOG_PROMISE_TO_PAY';
   templateKey: string;
   templateId: string;
   discountPct: number;
+  ptpDate?: string;
 }
 
 export interface BatchSummary {

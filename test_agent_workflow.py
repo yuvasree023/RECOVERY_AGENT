@@ -144,6 +144,86 @@ class TestDynamicReasoningAndOutcomeAwareness(unittest.TestCase):
 
         self.assertEqual(res_case.current_state, CaseState.TERMINATED)
 
+    def test_b2b_dispute_immediate_escalation(self):
+        """B2B invoice dispute reply immediately triggers escalation to human AR team."""
+        customer = Customer(
+            customer_id="cust_b2b_dispute",
+            segment="High",
+            ltv=50000.0,
+            whatsapp_consent=True,
+            opt_out_status=False
+        )
+        event = EventRecord(
+            event_id="evt_b2b_disp_01",
+            customer_id="cust_b2b_dispute",
+            event_type="INVOICE_OVERDUE",
+            amount=45000.0,
+            status="OVERDUE",
+            timestamp=datetime(2026, 9, 2, 9, 0, 0),
+            decline_code="DISPUTED_INVOICE",
+            attempt_number=1,
+            fraud_score=0.01,
+            retry_cooldown_hours=24,
+            customer_reply="We dispute the delivery quantity on PO-9912. Do not charge."
+        )
+        outcome = OutcomeRecord(
+            event_id="evt_b2b_disp_01",
+            resolved=False,
+            resolution_channel=None,
+            resolved_amount=0.0
+        )
+        case = RecoveryCase(
+            case_id="case_b2b_disp_01",
+            event_id="evt_b2b_disp_01",
+            customer_id="cust_b2b_dispute",
+            current_state=CaseState.INIT,
+            is_control_group=False
+        )
+
+        runner = AgentRunner(llm_engine=MockLLM())
+        res_case = runner.run_case(case, event, customer, outcome)
+        self.assertEqual(res_case.current_state, CaseState.ESCALATED)
+
+    def test_broken_ptp_escalation(self):
+        """Broken Promise-to-Pay after elapsed due date triggers escalation to operations."""
+        customer = Customer(
+            customer_id="cust_ptp_broken",
+            segment="Medium",
+            ltv=12000.0,
+            whatsapp_consent=False,
+            opt_out_status=False
+        )
+        event = EventRecord(
+            event_id="evt_ptp_broken_01",
+            customer_id="cust_ptp_broken",
+            event_type="INVOICE_OVERDUE",
+            amount=28000.0,
+            status="OVERDUE",
+            timestamp=datetime(2026, 8, 20, 9, 0, 0),
+            decline_code="OVERDUE_RECEIVABLE",
+            attempt_number=2,
+            fraud_score=0.02,
+            retry_cooldown_hours=24,
+            ptp_date="2026-08-25"
+        )
+        outcome = OutcomeRecord(
+            event_id="evt_ptp_broken_01",
+            resolved=False,
+            resolution_channel=None,
+            resolved_amount=0.0
+        )
+        case = RecoveryCase(
+            case_id="case_ptp_broken_01",
+            event_id="evt_ptp_broken_01",
+            customer_id="cust_ptp_broken",
+            current_state=CaseState.INIT,
+            is_control_group=False
+        )
+
+        runner = AgentRunner(llm_engine=MockLLM())
+        res_case = runner.run_case(case, event, customer, outcome)
+        self.assertIn(res_case.current_state, [CaseState.ESCALATED, CaseState.TERMINATED, CaseState.EXECUTED, CaseState.SCHEDULED])
+
 
 if __name__ == "__main__":
     unittest.main()

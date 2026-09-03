@@ -139,7 +139,7 @@ def extract_ptp_intent(reply: str) -> Dict[str, Any]:
         }
 
     # Dispute / rejection detection
-    if any(k in reply_lower for k in ["cancel my order", "scam", "fraud", "not interested", "wrong charge", "expensive"]):
+    if any(k in reply_lower for k in ["dispute", "disputed", "cancel my order", "scam", "fraud", "not interested", "wrong charge", "expensive", "do not charge", "dont charge"]):
         return {
             "intent": "dispute",
             "date": None,

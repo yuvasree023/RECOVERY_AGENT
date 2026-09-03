@@ -22,6 +22,16 @@ export const DECLINE_CODE_MAP: Record<string, DeclineDiagnosis> = {
     rootCause: 'CHECKOUT_FRICTION',
     retryStrategy: 'INCENTIVE_DISCOUNT',
     description: 'Checkout abandoned due to shipping cost. Recommended action: offer shipping discount or fee waiver.'
+  },
+  OVERDUE_RECEIVABLE: {
+    rootCause: 'COMMERCIAL_CREDIT_DELAY',
+    retryStrategy: 'STATEMENT_DUNNING',
+    description: 'B2B commercial invoice past due. Recommended action: dispatch formal statement reminder or record promise-to-pay.'
+  },
+  DISPUTED_INVOICE: {
+    rootCause: 'BILLING_DISPUTE',
+    retryStrategy: 'AR_SPECIALIST_REVIEW',
+    description: 'Customer raised discrepancy on invoice terms or amounts. Recommended action: route immediately to human AR desk.'
   }
 };
 

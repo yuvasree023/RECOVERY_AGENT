@@ -1,6 +1,6 @@
 {
   "name": "Recover — AI Revenue Recovery Engine",
-  "description": "Agentic Revenue Recovery System for Payment Failures, Checkout Drop-offs, and Subscriptions",
+  "description": "Agentic Revenue Recovery System for Payment Failures, Checkout Drop-offs, Subscriptions, and B2B Overdue Invoices",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
