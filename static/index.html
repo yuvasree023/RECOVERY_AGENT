@@ -4,671 +4,1009 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Recover — AI Revenue Recovery Engine</title>
-  <meta name="description" content="Agentic Revenue Recovery System for Payment Failures, Checkout Drop-offs, Subscriptions, and B2B Overdue Invoices">
+  <meta name="description" content="Autonomous, bounded revenue-recovery engine with Gemini dynamic reasoning and fail-closed guardrails.">
   <meta property="og:title" content="Recover — AI Revenue Recovery Engine">
-  <meta property="og:description" content="Agentic Revenue Recovery System for Payment Failures, Checkout Drop-offs, Subscriptions, and B2B Overdue Invoices">
+  <meta property="og:description" content="Autonomous, bounded revenue-recovery engine with Gemini dynamic reasoning and fail-closed guardrails.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <!-- Top Navigation Header -->
-  <header class="app-header" id="header-main">
-    <div class="header-left">
-      <div class="logo-brand">
-        <div class="logo-mark" id="logo-icon">RC</div>
-        <span class="brand-name">RECOVER</span>
-        <span class="brand-tag">Revenue Recovery Operations</span>
-      </div>
-      <nav class="nav-tabs" id="main-nav-tabs">
-        <button class="nav-tab active" data-tab="overview" id="tab-btn-overview">Overview</button>
-        <button class="nav-tab" data-tab="cases" id="tab-btn-cases">Cases</button>
-        <button class="nav-tab" data-tab="agent-runs" id="tab-btn-agent-runs">Agent Runs</button>
-        <button class="nav-tab" data-tab="playbooks" id="tab-btn-playbooks">Playbooks</button>
-        <button class="nav-tab" data-tab="simulator" id="tab-btn-simulator">Webhook Simulator</button>
-        <button class="nav-tab" data-tab="audit" id="tab-btn-audit">Audit Trail</button>
-      </nav>
-    </div>
-
-    <div class="header-right">
-      <div class="model-indicator" id="model-indicator-badge">
-        <span class="status-dot"></span>
-        <span>Agent Brain: Gemini 2.5 Flash</span>
-      </div>
-      <button class="btn btn-primary btn-sm" id="btn-quick-replay">
-        Run Offline Replay
-      </button>
-    </div>
-  </header>
-
-  <!-- Main Content Container -->
-  <main class="main-content" id="app-main-content">
+  <div class="app-layout" id="app-root">
     
-    <!-- Transparent Evaluation Disclosure -->
-    <div class="evaluation-notice" id="evaluation-disclosure-bar">
-      <div class="notice-left">
-        <span class="notice-badge">EVALUATION TRANSPARENCY</span>
-        <span class="notice-text">
-          Methodology: <strong>Offline historical replay</strong> &bull; Comparison: <strong>Simulated baseline comparison</strong> (20% holdout group) &bull; Modeled recovery economics.
-        </span>
-      </div>
-      <div class="notice-right">
-        <span class="badge badge-resolved" id="guardrail-integrity-pill">7 Guardrails Fail-Closed</span>
-      </div>
-    </div>
-
-    <!-- ========================================================================= -->
-    <!-- TAB 1: OVERVIEW -->
-    <!-- ========================================================================= -->
-    <section id="tab-overview" class="tab-content active">
-      <!-- High-Level Metric Cards -->
-      <div class="metrics-grid" id="kpi-metrics-grid">
-        <div class="metric-card" id="card-net-recovered">
-          <div class="metric-header">
-            <span class="metric-label">Net Recovered (Simulated)</span>
-            <span class="metric-tag badge-resolved">Net Yield</span>
-          </div>
-          <div class="metric-value" id="kpi-net-recovered">₹1,20,603.30</div>
-          <div class="metric-footer">
-            <span>Gross: <strong id="kpi-gross-recovered">₹1,20,669.00</strong></span>
-            <span>Cost: <span id="kpi-total-cost">₹65.70</span></span>
-          </div>
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar" id="app-sidebar">
+      <div class="sidebar-header">
+        <div class="brand-logo-icon" id="sidebar-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
         </div>
-
-        <div class="metric-card" id="card-resolution-rates">
-          <div class="metric-header">
-            <span class="metric-label">Recovery Rate Comparison</span>
-            <span class="metric-tag badge-act">Treatment vs Baseline</span>
-          </div>
-          <div class="metric-value" id="kpi-rate-difference">+9.19%</div>
-          <div class="metric-footer">
-            <span>Treatment: <strong id="kpi-treatment-rate">26.97%</strong></span>
-            <span>Baseline: <strong id="kpi-baseline-rate">17.78%</strong></span>
-          </div>
-        </div>
-
-        <div class="metric-card" id="card-roi-multiple">
-          <div class="metric-header">
-            <span class="metric-label">Modeled Recovery ROI</span>
-            <span class="metric-tag badge-act">Cost Multiple</span>
-          </div>
-          <div class="metric-value" id="kpi-roi-multiple">1,835.7x</div>
-          <div class="metric-footer">
-            <span>Yield per ₹1 spent</span>
-            <span>223 Replayed Events</span>
-          </div>
-        </div>
-
-        <div class="metric-card" id="card-guardrail-health">
-          <div class="metric-header">
-            <span class="metric-label">Deterministic Guardrails</span>
-            <span class="metric-tag badge-resolved">Zero Violations</span>
-          </div>
-          <div class="metric-value" id="kpi-compliance-rate">100%</div>
-          <div class="metric-footer">
-            <span>Interceptions: <strong id="kpi-guardrail-blocks">14</strong></span>
-            <span>Escalated: <strong id="kpi-escalations">6</strong></span>
-          </div>
+        <div class="brand-info">
+          <span class="brand-title">RECOVER</span>
+          <span class="brand-subtitle">AI Revenue Recovery</span>
         </div>
       </div>
 
-      <!-- Interactive Revenue Recovery Flow -->
-      <div class="recovery-flow-section" id="interactive-recovery-flow">
-        <div class="section-header">
-          <div>
-            <h2 class="section-title">Autonomous Revenue Recovery Workflow</h2>
-            <p class="section-subtitle">Click any stage node to inspect operational policies, state criteria, and active statistics.</p>
-          </div>
-          <span class="badge badge-act">Interactive Architecture</span>
+      <nav class="sidebar-nav" id="sidebar-nav-menu">
+        <button class="nav-item active" data-tab="overview" id="nav-btn-overview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span>Overview</span>
+        </button>
+
+        <button class="nav-item" data-tab="cases" id="nav-btn-cases">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+          </svg>
+          <span>Cases</span>
+        </button>
+
+        <button class="nav-item" data-tab="agent-runs" id="nav-btn-agent-runs">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+          <span>Agent Runs</span>
+        </button>
+
+        <button class="nav-item" data-tab="playbooks" id="nav-btn-playbooks">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          <span>Playbooks</span>
+        </button>
+
+        <button class="nav-item" data-tab="simulator" id="nav-btn-simulator">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="18" cy="18" r="3"></circle>
+            <circle cx="6" cy="6" r="3"></circle>
+            <path d="M13 6h3a2 2 0 0 1 2 2v7"></path>
+            <line x1="6" y1="9" x2="6" y2="21"></line>
+          </svg>
+          <span>Webhook Simulator</span>
+        </button>
+
+        <button class="nav-item" data-tab="audit" id="nav-btn-audit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <path d="M9 12l2 2 4-4"></path>
+          </svg>
+          <span>Audit Trail</span>
+        </button>
+
+        <button class="nav-item" data-tab="reports" id="nav-btn-reports">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+          <span>Reports</span>
+        </button>
+
+        <button class="nav-item" data-tab="settings" id="nav-btn-settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          <span>Settings</span>
+        </button>
+      </nav>
+
+      <!-- Upgrade Plan Card -->
+      <div class="sidebar-footer">
+        <div class="upgrade-card" id="sidebar-upgrade-card">
+          <div class="upgrade-title">Upgrade Plan</div>
+          <div class="upgrade-desc">Unlock advanced insights, custom playbooks and priority support.</div>
+          <button class="btn-upgrade" id="btn-upgrade-plan">Upgrade Now</button>
         </div>
 
-        <div class="flow-container" id="flow-diagram-container">
-          <!-- Node 1 -->
-          <div class="flow-node active-node" data-flow="risk" id="flow-node-risk">
-            <div class="node-step-label">Stage 01</div>
-            <div class="node-title">Revenue at Risk</div>
-            <div class="node-metric" id="flow-stat-risk">₹1.88M</div>
-            <div class="node-description">Failed transactions, cart abandonments, and mandate lapses ingested via webhook.</div>
-          </div>
-
-          <div class="flow-arrow">&rarr;</div>
-
-          <!-- Node 2 -->
-          <div class="flow-node" data-flow="brain" id="flow-node-brain">
-            <div class="node-step-label">Stage 02</div>
-            <div class="node-title">Agent Brain (Gemini)</div>
-            <div class="node-metric" id="flow-stat-brain">ReAct Loop</div>
-            <div class="node-description">Synthesizes ML likelihood, LTV, decline diagnosis, and prior outcomes to choose tools.</div>
-          </div>
-
-          <div class="flow-arrow">&rarr;</div>
-
-          <!-- Node 3 -->
-          <div class="flow-node" data-flow="actions" id="flow-node-actions">
-            <div class="node-step-label">Stage 03</div>
-            <div class="node-title">Production Tools</div>
-            <div class="node-metric" id="flow-stat-actions">4 Tool APIs</div>
-            <div class="node-description">Payment Gateway Retry, Omnichannel Messaging, Bounded Discounts, Human Desk.</div>
-          </div>
-
-          <div class="flow-arrow">&rarr;</div>
-
-          <!-- Node 4 -->
-          <div class="flow-node" data-flow="guardrails" id="flow-node-guardrails">
-            <div class="node-step-label">Stage 04</div>
-            <div class="node-title">Deterministic Guardrails</div>
-            <div class="node-metric" id="flow-stat-guardrails">7 Rules</div>
-            <div class="node-description">Veto power over agent proposals: DND curfew, opt-out, cooldown, fraud threshold.</div>
-          </div>
-
-          <div class="flow-arrow">&rarr;</div>
-
-          <!-- Node 5 -->
-          <div class="flow-node" data-flow="recovery" id="flow-node-recovery">
-            <div class="node-step-label">Stage 05</div>
-            <div class="node-title">Recovered Value</div>
-            <div class="node-metric" id="flow-stat-recovery">₹1.20M</div>
-            <div class="node-description">Settled payment verification, automated reconciliation, and terminal audit logs.</div>
-          </div>
-        </div>
-
-        <!-- Interactive Flow Details Inspector -->
-        <div class="flow-inspector" id="flow-inspector-box">
-          <div class="inspector-text" id="flow-inspector-text">
-            <strong>Stage 01: Revenue at Risk</strong> &mdash; Ingests UPI declines, card expiration events, network timeouts, and abandoned checkout baskets with real-time customer LTV metadata.
-          </div>
-          <div class="inspector-action" id="flow-inspector-action" onclick="switchTab('cases')">Explore Cases &rarr;</div>
-        </div>
-      </div>
-
-      <!-- Playbook & Root Cause Performance Breakdown -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-        <div class="content-card" id="card-playbook-performance">
-          <div class="section-header">
-            <h3 class="section-title">Performance by Recovery Playbook</h3>
-            <span class="notice-badge">Simulated</span>
-          </div>
-          <table class="data-table" id="table-playbook-summary">
-            <thead>
-              <tr>
-                <th>Playbook</th>
-                <th>Volume</th>
-                <th>Resolved</th>
-                <th>Rate</th>
-                <th>Net Recovered</th>
-              </tr>
-            </thead>
-            <tbody id="playbook-summary-tbody">
-              <tr>
-                <td>Payment Failure Recovery</td>
-                <td>138</td>
-                <td>37</td>
-                <td>26.8%</td>
-                <td><strong style="color: #34d399;">₹89,450.00</strong></td>
-              </tr>
-              <tr>
-                <td>Checkout Drop-off Recovery</td>
-                <td>40</td>
-                <td>11</td>
-                <td>27.5%</td>
-                <td><strong style="color: #34d399;">₹31,153.30</strong></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="content-card" id="card-root-cause-performance">
-          <div class="section-header">
-            <h3 class="section-title">Root Cause Resolution Rates</h3>
-            <span class="notice-badge">Time-Split Scorer</span>
-          </div>
-          <table class="data-table" id="table-rootcause-summary">
-            <thead>
-              <tr>
-                <th>Decline Reason</th>
-                <th>Cases</th>
-                <th>Resolution Rate</th>
-                <th>Net Recovered</th>
-              </tr>
-            </thead>
-            <tbody id="rootcause-summary-tbody">
-              <tr>
-                <td><code>NETWORK_TIMEOUT</code></td>
-                <td>74</td>
-                <td>32.4%</td>
-                <td>₹58,920.00</td>
-              </tr>
-              <tr>
-                <td><code>INSUFFICIENT_FUNDS</code></td>
-                <td>46</td>
-                <td>21.7%</td>
-                <td>₹24,180.00</td>
-              </tr>
-              <tr>
-                <td><code>HIGH_SHIPPING_COST</code></td>
-                <td>40</td>
-                <td>27.5%</td>
-                <td>₹31,153.30</td>
-              </tr>
-              <tr>
-                <td><code>CARD_EXPIRED</code></td>
-                <td>18</td>
-                <td>11.1%</td>
-                <td>₹6,350.00</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="sidebar-help-link" id="btn-sidebar-help">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <span>Help &amp; Support</span>
         </div>
       </div>
-    </section>
+    </aside>
 
-    <!-- ========================================================================= -->
-    <!-- TAB 2: CASES (CASE EXPLORER & DEEP TIMELINES) -->
-    <!-- ========================================================================= -->
-    <section id="tab-cases" class="tab-content">
-      <div class="content-card">
-        <div class="table-toolbar">
-          <div style="display: flex; gap: 10px; align-items: center;">
-            <input type="text" class="search-input" id="case-search" placeholder="Search case, customer ID, event...">
-            <select class="select-filter" id="filter-state">
-              <option value="ALL">All States</option>
-              <option value="RESOLVED">Resolved</option>
-              <option value="ACT">Action Executed</option>
-              <option value="ESCALATED">Escalated</option>
-              <option value="TERMINATED">Terminated</option>
-            </select>
-            <select class="select-filter" id="filter-playbook">
-              <option value="ALL">All Playbooks</option>
-              <option value="UPI_PAYMENT_FAIL">Payment Failure</option>
-              <option value="CART_ABANDON">Checkout Drop-off</option>
-              <option value="SUBSCRIPTION_FAIL">Subscription Mandate</option>
-            </select>
-          </div>
-          <div style="font-size: 12px; color: var(--text-muted);">
-            Click any row to open the <strong>Deep Case Timeline</strong>.
-          </div>
+    <!-- MAIN WRAPPER -->
+    <div class="main-wrapper">
+      
+      <!-- TOP BAR -->
+      <header class="topbar" id="app-topbar">
+        <div class="topbar-search-container">
+          <svg class="topbar-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" class="topbar-search-input" id="global-search-input" placeholder="Search cases, customers, invoices...">
         </div>
 
-        <table class="data-table" id="cases-master-table">
-          <thead>
-            <tr>
-              <th>Case Reference</th>
-              <th>Customer</th>
-              <th>Decline Code</th>
-              <th>Amount</th>
-              <th>State</th>
-              <th>Attempts</th>
-              <th>Likelihood</th>
-              <th>Decision Reason</th>
-              <th>Recovered</th>
-            </tr>
-          </thead>
-          <tbody id="cases-table-body">
-            <!-- Rendered dynamically -->
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- ========================================================================= -->
-    <!-- TAB 3: AGENT RUNS (STATE MACHINE VISUALIZATION) -->
-    <!-- ========================================================================= -->
-    <section id="tab-agent-runs" class="tab-content">
-      <div class="content-card">
-        <div class="section-header">
-          <div>
-            <h2 class="section-title">Autonomous Agent State Machine</h2>
-            <p class="section-subtitle">Every recovery case transitions through this bounded, deterministic state lifecycle.</p>
-          </div>
-          <span class="badge badge-act">Live Lifecycle</span>
-        </div>
-
-        <div class="state-machine-grid" id="state-machine-flow-grid">
-          <div class="state-node" id="sm-node-new">
-            <div class="state-node-title">NEW</div>
-            <div class="state-node-desc">Webhook ingested, case initialized in DB</div>
-          </div>
-          <div class="state-node" id="sm-node-observe">
-            <div class="state-node-title">OBSERVE</div>
-            <div class="state-node-desc">Pre-flight checks, gateway status, customer history</div>
-          </div>
-          <div class="state-node" id="sm-node-reason">
-            <div class="state-node-title">REASON</div>
-            <div class="state-node-desc">ML likelihood scoring & root cause diagnosis</div>
-          </div>
-          <div class="state-node" id="sm-node-plan">
-            <div class="state-node-title">PLAN</div>
-            <div class="state-node-desc">Gemini Tool Calling (proposes channel & action)</div>
-          </div>
-          <div class="state-node" id="sm-node-guardrail">
-            <div class="state-node-title">GUARDRAIL_CHECK</div>
-            <div class="state-node-desc">7 deterministic rules evaluate safety & compliance</div>
-          </div>
-          <div class="state-node" id="sm-node-replan">
-            <div class="state-node-title">REPLAN</div>
-            <div class="state-node-desc">Adaptive loop if guardrail blocks (e.g. DND curfew)</div>
-          </div>
-          <div class="state-node" id="sm-node-act">
-            <div class="state-node-title">ACT</div>
-            <div class="state-node-desc">Tool dispatched (retry / message / discount / escalate)</div>
-          </div>
-          <div class="state-node" id="sm-node-observe-outcome">
-            <div class="state-node-title">OBSERVE_OUTCOME</div>
-            <div class="state-node-desc">Inspect gateway settlement & customer reply</div>
-          </div>
-          <div class="state-node" id="sm-node-decide-next">
-            <div class="state-node-title">DECIDE_NEXT</div>
-            <div class="state-node-desc">Multi-turn loop back or safe terminal transition</div>
-          </div>
-          <div class="state-node" id="sm-node-terminal">
-            <div class="state-node-title">TERMINAL</div>
-            <div class="state-node-desc">RESOLVED / TERMINATED / ESCALATED</div>
-          </div>
-        </div>
-
-        <div style="margin-top: 24px;">
-          <h3 class="section-title" style="margin-bottom: 12px;">Recent Agent Execution Runs</h3>
-          <table class="data-table" id="table-recent-agent-runs">
-            <thead>
-              <tr>
-                <th>Case ID</th>
-                <th>Event Type</th>
-                <th>Current State</th>
-                <th>Reasoning Synthesis</th>
-                <th>Iterations</th>
-                <th>Tool Call Outcome</th>
-              </tr>
-            </thead>
-            <tbody id="agent-runs-tbody">
-              <!-- Rendered dynamically from cases -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========================================================================= -->
-    <!-- TAB 4: PLAYBOOKS -->
-    <!-- ========================================================================= -->
-    <section id="tab-playbooks" class="tab-content">
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-        <div class="content-card">
-          <div class="section-header">
-            <h3 class="section-title">1. Payment Failure Recovery</h3>
-            <span class="badge badge-resolved">Live Playbook</span>
-          </div>
-          <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
-            Handles involuntary churn from credit card, debit card, and UPI payment decline codes.
-          </p>
-          <ul style="padding-left: 20px; font-size: 13px; color: var(--text-secondary); line-height: 1.8;">
-            <li><strong>Insufficient Funds:</strong> 2h cooldown before retry; respectful reminder link via WhatsApp or Email.</li>
-            <li><strong>Card Expired:</strong> Automated retries halted; customer prompted with secure card update portal.</li>
-            <li><strong>Network & Bank Timeout:</strong> Rapid automated retry scheduled post-cooldown.</li>
-            <li><strong>Card Declined:</strong> Alternate payment method offered (UPI intent / QR).</li>
-          </ul>
-        </div>
-
-        <div class="content-card">
-          <div class="section-header">
-            <h3 class="section-title">2. Checkout Drop-off Recovery</h3>
-            <span class="badge badge-resolved">Live Playbook</span>
-          </div>
-          <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
-            Recovers high-intent shopping carts abandoned during payment selection or shipping calculation.
-          </p>
-          <ul style="padding-left: 20px; font-size: 13px; color: var(--text-secondary); line-height: 1.8;">
-            <li><strong>Initial Abandonment:</strong> Passive cart summary dispatched via preferred channel.</li>
-            <li><strong>High Shipping Cost Friction:</strong> AI offers bounded discount incentive (strictly capped at 10%).</li>
-            <li><strong>Multi-Turn Adaptation:</strong> Observes item inventory and cart expiry windows.</li>
-            <li><strong>Margin Protection:</strong> High-tier carts receive assistance without unnecessary discounts.</li>
-          </ul>
-        </div>
-
-        <div class="content-card">
-          <div class="section-header">
-            <h3 class="section-title">3. Subscription Mandate Recovery</h3>
-            <span class="badge badge-act">Live Playbook</span>
-          </div>
-          <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
-            Automated handling for recurring e-mandates (RBI e-mandate guidelines, UPI AutoPay, credit cards).
-          </p>
-          <ul style="padding-left: 20px; font-size: 13px; color: var(--text-secondary); line-height: 1.8;">
-            <li><strong>Pre-debit Notification:</strong> Sent 24h prior to mandate charge.</li>
-            <li><strong>Failed Mandate Retry:</strong> Delayed execution matching salary cycles (1st to 5th of month).</li>
-            <li><strong>Fallback Payment Link:</strong> One-time link sent if auto-debit fails after 2 attempts.</li>
-            <li><strong>Grace Period Management:</strong> Keeps service active while dunning workflow runs.</li>
-          </ul>
-        </div>
-
-        <div class="content-card">
-          <div class="section-header">
-            <h3 class="section-title">4. B2B Receivables Recovery</h3>
-            <span class="badge badge-act">Configured Playbook</span>
-          </div>
-          <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
-            Commercial dunning workflow for past-due enterprise invoices and net-30 accounts.
-          </p>
-          <ul style="padding-left: 20px; font-size: 13px; color: var(--text-secondary); line-height: 1.8;">
-            <li><strong>Invoice Reminder:</strong> Formal statement sent on Day 1 past due.</li>
-            <li><strong>Dispute Routing:</strong> If customer flags billing error, routes to human accounts receivable desk.</li>
-            <li><strong>Promise to Pay (PTP):</strong> Records agreed payment date and pauses automated notices.</li>
-            <li><strong>Credit Hold Warning:</strong> Compliant warning before restricting service access.</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========================================================================= -->
-    <!-- TAB 5: WEBHOOK SIMULATOR (LIVE TEST BENCH) -->
-    <!-- ========================================================================= -->
-    <section id="tab-simulator" class="tab-content">
-      <div class="simulator-layout">
-        <!-- Controls Column -->
-        <div class="content-card">
-          <div class="section-header">
-            <h3 class="section-title">Webhook Simulator</h3>
-            <span class="badge badge-act">Live Test Bench</span>
-          </div>
-
-          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">
-            Choose a realistic test scenario or configure parameters to observe Gemini's tool calls and guardrail evaluation in real-time.
-          </p>
-
-          <!-- Preset Demo Scenarios -->
-          <div class="preset-buttons">
-            <div class="preset-btn" onclick="applyPreset('adaptive_recovery')">
-              <div class="preset-btn-title">Scenario A: Adaptive Recovery</div>
-              <div class="preset-btn-desc">Payment decline &rarr; Retry fails &rarr; AI reassesses &rarr; Email link &rarr; Recovered</div>
-            </div>
-
-            <div class="preset-btn" onclick="applyPreset('guardrail_replan')">
-              <div class="preset-btn-title">Scenario B: Guardrail Interception &amp; Replan</div>
-              <div class="preset-btn-desc">AI proposes WhatsApp &rarr; Telecom DND curfew blocks &rarr; AI replans to Email</div>
-            </div>
-
-            <div class="preset-btn" onclick="applyPreset('safe_termination')">
-              <div class="preset-btn-title">Scenario C: Safe Termination (Fraud Risk)</div>
-              <div class="preset-btn-desc">Elevated fraud score (0.88) &rarr; Outreach halted &rarr; Flagged for security review</div>
-            </div>
-
-            <div class="preset-btn" onclick="applyPreset('cart_dropoff')">
-              <div class="preset-btn-title">Scenario D: Checkout Drop-off Discount</div>
-              <div class="preset-btn-desc">Cart abandonment &rarr; Low conversion signal &rarr; AI issues 10% coupon &rarr; Recovered</div>
-            </div>
-          </div>
-
-          <!-- Configuration Form -->
-          <div class="form-group">
-            <label class="form-label" for="sim-event-type">Event Type</label>
-            <select class="form-control" id="sim-event-type">
-              <option value="UPI_PAYMENT_FAIL">UPI_PAYMENT_FAIL (Payment Failure)</option>
-              <option value="CART_ABANDON">CART_ABANDON (Checkout Drop-off)</option>
-              <option value="SUBSCRIPTION_FAIL">SUBSCRIPTION_FAIL (Mandate Lapse)</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="sim-decline-code">Decline Reason / Code</label>
-            <select class="form-control" id="sim-decline-code">
-              <option value="NETWORK_TIMEOUT">NETWORK_TIMEOUT (Transient Glitch)</option>
-              <option value="INSUFFICIENT_FUNDS">INSUFFICIENT_FUNDS (Cashflow Decline)</option>
-              <option value="CARD_EXPIRED">CARD_EXPIRED (Instrument Invalid)</option>
-              <option value="HIGH_SHIPPING_COST">HIGH_SHIPPING_COST (Checkout Drop-off)</option>
-              <option value="CARD_DECLINED">CARD_DECLINED (Bank Rejected)</option>
-            </select>
-          </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div class="form-group">
-              <label class="form-label" for="sim-amount">Amount (INR)</label>
-              <input type="number" class="form-control" id="sim-amount" value="2499">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="sim-segment">Customer Segment</label>
-              <select class="form-control" id="sim-segment">
-                <option value="High">High (LTV ₹45,000)</option>
-                <option value="Medium">Medium (LTV ₹15,000)</option>
-                <option value="Low">Low (LTV ₹3,500)</option>
-              </select>
-            </div>
-          </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div class="form-group">
-              <label class="form-label" for="sim-fraud-score">Fraud Risk Score</label>
-              <input type="number" class="form-control" id="sim-fraud-score" step="0.05" min="0" max="1" value="0.10">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="sim-time-of-day">Time of Day</label>
-              <select class="form-control" id="sim-time-of-day">
-                <option value="DAY">Daytime (14:00 - Compliant)</option>
-                <option value="NIGHT_DND">Night DND (22:30 - Curfew Active)</option>
-              </select>
-            </div>
-          </div>
-
-          <div style="display: flex; gap: 16px; margin: 12px 0 18px 0; font-size: 12px;">
-            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-              <input type="checkbox" id="sim-whatsapp-consent" checked>
-              <span>WhatsApp Consent</span>
-            </label>
-            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-              <input type="checkbox" id="sim-opt-out">
-              <span>Customer Opted Out</span>
-            </label>
-          </div>
-
-          <button class="btn btn-primary" id="btn-run-simulation" style="width: 100%;">
-            Dispatch Webhook &amp; Run Agent Loop
+        <div class="topbar-right">
+          <!-- Notification Bell -->
+          <button class="topbar-icon-btn" id="btn-notifications" title="Notifications">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span class="topbar-badge-dot"></span>
           </button>
-        </div>
 
-        <!-- Live Chronological Trace Feed -->
-        <div class="live-trace-panel">
-          <div class="section-header">
-            <h3 class="section-title">Live Agent Execution Trace</h3>
-            <span class="badge badge-act" id="trace-status-pill">Ready</span>
-          </div>
+          <!-- Help Icon -->
+          <button class="topbar-icon-btn" id="btn-topbar-help" title="Help">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </button>
 
-          <div class="trace-terminal" id="trace-terminal-feed">
-            <div class="trace-line" style="color: var(--text-dim);">
-              [System Ready] Select a scenario preset on the left or press "Dispatch Webhook" to watch the multi-turn agent reasoning loop execute in real-time.
+          <!-- User Profile -->
+          <div class="topbar-profile" id="user-profile-widget">
+            <div class="profile-avatar" id="user-avatar">CH</div>
+            <div class="profile-info">
+              <span class="profile-name">Courtney Henry</span>
+              <span class="profile-role">Admin</span>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </header>
 
-    <!-- ========================================================================= -->
-    <!-- TAB 6: AUDIT TRAIL -->
-    <!-- ========================================================================= -->
-    <section id="tab-audit" class="tab-content">
-      <div class="content-card">
-        <div class="table-toolbar">
-          <div style="display: flex; gap: 12px; align-items: center;">
-            <span style="font-weight: 600; font-size: 14px;">Compliance Audit Log</span>
-            <select class="select-filter" id="audit-filter-step" onchange="fetchAuditLogs()">
-              <option value="ALL">All Audit Steps</option>
-              <option value="OBSERVE">OBSERVE</option>
-              <option value="REASON">REASON</option>
-              <option value="PLAN">PLAN</option>
-              <option value="GUARDRAIL_CHECK">GUARDRAIL_CHECK</option>
-              <option value="GUARDRAIL_FAIL">GUARDRAIL_FAIL</option>
-              <option value="REPLAN">REPLAN</option>
-              <option value="ACT">ACT</option>
-              <option value="OBSERVE_OUTCOME">OBSERVE_OUTCOME</option>
-              <option value="CLOSE">CLOSE</option>
-              <option value="ESCALATE">ESCALATE</option>
-            </select>
+      <!-- CONTENT BODY -->
+      <main class="content-body" id="main-content-body">
+        
+        <!-- ===================================================================== -->
+        <!-- TAB 1: OVERVIEW (DASHBOARD) -->
+        <!-- ===================================================================== -->
+        <section id="tab-overview" class="tab-content active">
+          <!-- Page Header -->
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Overview</h1>
+              <p class="page-subtitle">Monitor your revenue recovery performance</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-primary" id="btn-new-recovery">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>New Recovery</span>
+              </button>
+              <button class="btn btn-outline" id="btn-view-reports">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                <span>View Reports</span>
+              </button>
+            </div>
           </div>
-          <button class="btn btn-secondary btn-sm" onclick="fetchAuditLogs()">Refresh Audit Trail</button>
-        </div>
 
-        <table class="data-table" id="audit-log-table">
-          <thead>
-            <tr>
-              <th>Timestamp</th>
-              <th>Case ID</th>
-              <th>Step</th>
-              <th>Decision Reason (User-Safe)</th>
-              <th>Audit Details</th>
-            </tr>
-          </thead>
-          <tbody id="audit-table-body">
-            <!-- Rendered dynamically -->
-          </tbody>
-        </table>
-      </div>
-    </section>
+          <!-- 4 KPI Cards -->
+          <div class="kpi-grid">
+            <!-- Card 1: Revenue at Risk -->
+            <div class="kpi-card" id="kpi-card-risk">
+              <div class="kpi-top">
+                <div class="kpi-icon-circle kpi-icon-purple">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="kpi-label">Revenue at Risk</div>
+              <div class="kpi-value" id="val-revenue-risk">₹12.4L</div>
+              <div class="kpi-trend">
+                <span class="trend-positive">+12.5%</span>
+                <span class="trend-context">vs last month</span>
+              </div>
+            </div>
 
-  </main>
+            <!-- Card 2: Recovered Revenue -->
+            <div class="kpi-card" id="kpi-card-recovered">
+              <div class="kpi-top">
+                <div class="kpi-icon-circle kpi-icon-teal">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                    <polyline points="17 6 23 6 23 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="kpi-label">Recovered Revenue</div>
+              <div class="kpi-value" id="val-recovered-revenue">₹3.8L</div>
+              <div class="kpi-trend">
+                <span class="trend-positive">+8.3%</span>
+                <span class="trend-context">vs last month</span>
+              </div>
+            </div>
 
-  <!-- Deep Case Timeline Drawer -->
-  <div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
-  <aside class="timeline-drawer" id="case-timeline-drawer">
-    <div class="drawer-header">
-      <div>
-        <h3 class="drawer-title" id="drawer-case-title">Case Details</h3>
-        <span style="font-size: 11px; color: var(--text-muted);" id="drawer-case-subtitle">Deep Chronological Event Timeline</span>
-      </div>
-      <button class="drawer-close" onclick="closeDrawer()">&times;</button>
+            <!-- Card 3: Recovery Rate -->
+            <div class="kpi-card" id="kpi-card-rate">
+              <div class="kpi-top">
+                <div class="kpi-icon-circle kpi-icon-purple">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="kpi-label">Recovery Rate</div>
+              <div class="kpi-value" id="val-recovery-rate">30.6%</div>
+              <div class="kpi-trend">
+                <span class="trend-positive">+4.2 pp</span>
+                <span class="trend-context">vs last month</span>
+              </div>
+            </div>
+
+            <!-- Card 4: Active Cases -->
+            <div class="kpi-card" id="kpi-card-cases">
+              <div class="kpi-top">
+                <div class="kpi-icon-circle kpi-icon-blue">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="kpi-label">Active Cases</div>
+              <div class="kpi-value" id="val-active-cases">223</div>
+              <div class="kpi-trend">
+                <span class="trend-positive">+15</span>
+                <span class="trend-context">vs last month</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Grid (Line Chart + Donut Chart) -->
+          <div class="charts-grid">
+            <!-- Left Chart: Recovery Overview (Line Chart) -->
+            <div class="card" id="card-recovery-overview-chart">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Recovery Overview</div>
+                </div>
+                <div class="card-header-controls">
+                  <div class="chart-legend-inline">
+                    <div class="legend-item">
+                      <span class="legend-dot dot-purple"></span>
+                      <span>Treatment</span>
+                    </div>
+                    <div class="legend-item">
+                      <span class="legend-dot dot-teal"></span>
+                      <span>Baseline</span>
+                    </div>
+                  </div>
+                  <select class="select-dropdown" id="overview-chart-range">
+                    <option value="7d">Last 7 days</option>
+                    <option value="30d">Last 30 days</option>
+                    <option value="90d">Last 90 days</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Interactive Line Chart Container -->
+              <div class="line-chart-container" id="overview-line-chart-box">
+                <!-- Injected via SVG in app.js -->
+              </div>
+            </div>
+
+            <!-- Right Chart: Recovery by Playbook (Donut Chart) -->
+            <div class="card" id="card-recovery-playbook-chart">
+              <div class="card-header">
+                <div class="card-title">Recovery by Playbook</div>
+              </div>
+
+              <div class="donut-chart-layout">
+                <div class="donut-svg-wrap" id="playbook-donut-wrap">
+                  <!-- SVG injected in app.js -->
+                  <div class="donut-center-label">
+                    <div class="donut-center-val" id="donut-center-revenue">₹3.8L</div>
+                    <div class="donut-center-sub">Recovered</div>
+                  </div>
+                </div>
+
+                <div class="donut-legend-list">
+                  <div class="donut-legend-row">
+                    <span class="legend-dot dot-purple"></span>
+                    <div class="donut-legend-info">
+                      <span class="donut-legend-name">Payment Failure</span>
+                      <span class="donut-legend-stats" id="stats-payment-failure">₹2.7L (71%)</span>
+                    </div>
+                  </div>
+
+                  <div class="donut-legend-row">
+                    <span class="legend-dot dot-teal"></span>
+                    <div class="donut-legend-info">
+                      <span class="donut-legend-name">Checkout Abandonment</span>
+                      <span class="donut-legend-stats" id="stats-checkout-abandonment">₹0.9L (24%)</span>
+                    </div>
+                  </div>
+
+                  <div class="donut-legend-row">
+                    <span class="legend-dot dot-amber"></span>
+                    <div class="donut-legend-info">
+                      <span class="donut-legend-name">Invoice Overdue</span>
+                      <span class="donut-legend-stats" id="stats-invoice-overdue">₹0.2L (5%)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Grid (Recent Cases Table & Agent Activity) -->
+          <div class="bottom-grid">
+            <!-- Left: Recent Recovery Cases Table -->
+            <div class="card" id="card-recent-cases">
+              <div class="card-header">
+                <div class="card-title">Recent Recovery Cases</div>
+              </div>
+
+              <div class="table-responsive">
+                <table class="prodify-table" id="table-recent-cases">
+                  <thead>
+                    <tr>
+                      <th>Case ID</th>
+                      <th>Type</th>
+                      <th>Customer</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                      <th>Last Action</th>
+                      <th>Time</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody-recent-cases">
+                    <!-- Populated dynamically via app.js -->
+                  </tbody>
+                </table>
+              </div>
+
+              <a class="card-footer-link" id="link-view-all-cases">
+                <span>View all cases</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </a>
+            </div>
+
+            <!-- Right: Agent Activity Timeline -->
+            <div class="card" id="card-agent-activity">
+              <div class="card-header">
+                <div class="card-title">Agent Activity</div>
+              </div>
+
+              <div class="agent-activity-timeline" id="overview-activity-timeline">
+                <!-- Activity Step 1: Observe -->
+                <div class="timeline-step-row">
+                  <div class="timeline-step-icon icon-observe">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  </div>
+                  <div class="timeline-step-content">
+                    <div class="timeline-step-header">
+                      <span class="timeline-step-name">Observe</span>
+                      <span class="timeline-step-time">10:31:04 AM</span>
+                    </div>
+                    <div class="timeline-step-desc">Case CASE-1042 received</div>
+                  </div>
+                </div>
+
+                <!-- Activity Step 2: Plan -->
+                <div class="timeline-step-row">
+                  <div class="timeline-step-icon icon-plan">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                  </div>
+                  <div class="timeline-step-content">
+                    <div class="timeline-step-header">
+                      <span class="timeline-step-name">Plan</span>
+                      <span class="timeline-step-time">10:31:05 AM</span>
+                    </div>
+                    <div class="timeline-step-desc">Agent decided: Retry Payment</div>
+                  </div>
+                </div>
+
+                <!-- Activity Step 3: Guardrail -->
+                <div class="timeline-step-row">
+                  <div class="timeline-step-icon icon-guardrail">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                  </div>
+                  <div class="timeline-step-content">
+                    <div class="timeline-step-header">
+                      <span class="timeline-step-name">Guardrail</span>
+                      <span class="timeline-step-time">10:31:05 AM</span>
+                    </div>
+                    <div class="timeline-step-desc">Action approved &#10003;</div>
+                  </div>
+                </div>
+
+                <!-- Activity Step 4: Act -->
+                <div class="timeline-step-row">
+                  <div class="timeline-step-icon icon-act">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                  </div>
+                  <div class="timeline-step-content">
+                    <div class="timeline-step-header">
+                      <span class="timeline-step-name">Act</span>
+                      <span class="timeline-step-time">10:31:06 AM</span>
+                    </div>
+                    <div class="timeline-step-desc">Payment retry executed</div>
+                  </div>
+                </div>
+
+                <!-- Activity Step 5: Outcome -->
+                <div class="timeline-step-row">
+                  <div class="timeline-step-icon icon-outcome">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </div>
+                  <div class="timeline-step-content">
+                    <div class="timeline-step-header">
+                      <span class="timeline-step-name">Outcome</span>
+                      <span class="timeline-step-time">10:31:12 AM</span>
+                    </div>
+                    <div class="timeline-step-desc">Payment successful</div>
+                  </div>
+                </div>
+
+                <!-- Activity Step 6: Result -->
+                <div class="timeline-step-row">
+                  <div class="timeline-step-icon icon-result">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                  </div>
+                  <div class="timeline-step-content">
+                    <div class="timeline-step-header">
+                      <span class="timeline-step-name">Result</span>
+                      <span class="timeline-step-time">10:31:13 AM</span>
+                    </div>
+                    <div class="timeline-step-desc">Case recovered</div>
+                  </div>
+                </div>
+              </div>
+
+              <a class="card-footer-link" id="link-view-full-run">
+                <span>View full run</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- TAB 2: CASES -->
+        <!-- ===================================================================== -->
+        <section id="tab-cases" class="tab-content">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Cases</h1>
+              <p class="page-subtitle">Inspect and drill down into all autonomous recovery cases</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <!-- Toolbar -->
+            <div class="toolbar-row">
+              <div class="toolbar-left">
+                <div class="search-input-wrap">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                  <input type="text" class="table-search-input" id="cases-search-field" placeholder="Search cases...">
+                </div>
+
+                <select class="select-filter-prodify" id="cases-type-filter">
+                  <option value="ALL">All Types</option>
+                  <option value="UPI_PAYMENT_FAIL">Payment Failure</option>
+                  <option value="CART_ABANDON">Checkout Abandonment</option>
+                  <option value="INVOICE_OVERDUE">Invoice Overdue</option>
+                  <option value="SUBSCRIPTION_FAIL">Subscription Mandate</option>
+                </select>
+
+                <select class="select-filter-prodify" id="cases-status-filter">
+                  <option value="ALL">All Status</option>
+                  <option value="RESOLVED">Recovered</option>
+                  <option value="ACT">Recovering</option>
+                  <option value="ESCALATED">Escalated</option>
+                  <option value="PROMISE_MADE">Promise Made</option>
+                  <option value="TERMINATED">Terminated</option>
+                </select>
+              </div>
+
+              <button class="btn btn-outline btn-sm" id="btn-cases-filter-action">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="4" y1="21" x2="4" y2="14"></line>
+                  <line x1="4" y1="10" x2="4" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12" y2="3"></line>
+                  <line x1="20" y1="21" x2="20" y2="16"></line>
+                  <line x1="20" y1="12" x2="20" y2="3"></line>
+                  <line x1="1" y1="14" x2="7" y2="14"></line>
+                  <line x1="9" y1="8" x2="15" y2="8"></line>
+                  <line x1="17" y1="16" x2="23" y2="16"></line>
+                </svg>
+                <span>Filters</span>
+              </button>
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive">
+              <table class="prodify-table" id="table-cases-all">
+                <thead>
+                  <tr>
+                    <th>Case ID</th>
+                    <th>Type</th>
+                    <th>Customer</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Last Action</th>
+                    <th>Time</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-cases-all">
+                  <!-- Injected dynamically via app.js -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-row">
+              <button class="page-btn">&lt;</button>
+              <button class="page-btn active">1</button>
+              <button class="page-btn">2</button>
+              <button class="page-btn">3</button>
+              <button class="page-btn">&gt;</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- TAB 3: AGENT RUNS -->
+        <!-- ===================================================================== -->
+        <section id="tab-agent-runs" class="tab-content">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Agent Runs</h1>
+              <p class="page-subtitle">Track multi-turn reasoning loops, tool dispatches, and outcome stages</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <!-- Toolbar -->
+            <div class="toolbar-row">
+              <div class="toolbar-left">
+                <div class="search-input-wrap">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                  <input type="text" class="table-search-input" id="agent-runs-search" placeholder="Search cases...">
+                </div>
+              </div>
+
+              <button class="btn btn-outline btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+                <span>Filters</span>
+              </button>
+            </div>
+
+            <!-- Agent Runs Cards List -->
+            <div class="agent-runs-list" id="agent-runs-cards-container">
+              <!-- Rendered dynamically in app.js -->
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- TAB 4: PLAYBOOKS -->
+        <!-- ===================================================================== -->
+        <section id="tab-playbooks" class="tab-content">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Playbooks</h1>
+              <p class="page-subtitle">Automated recovery workflows and dunning strategies</p>
+            </div>
+            <button class="btn btn-primary btn-sm" id="btn-add-playbook">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>Add Playbook</span>
+            </button>
+          </div>
+
+          <div class="playbooks-grid">
+            <!-- Playbook 1: Payment Failure -->
+            <div class="playbook-card">
+              <div class="playbook-header">
+                <span class="playbook-title">Payment Failure</span>
+                <span class="badge badge-teal">Active</span>
+              </div>
+              <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                Handles involuntary payment declines from cards, UPI switches, and banking timeouts.
+              </p>
+              <div class="playbook-stats-row">
+                <div class="playbook-stat-item">
+                  <span class="playbook-stat-label">Success Rate</span>
+                  <span class="playbook-stat-val" style="color: var(--primary-purple);">28.6%</span>
+                </div>
+                <div class="playbook-stat-item">
+                  <span class="playbook-stat-label">Cases</span>
+                  <span class="playbook-stat-val">138</span>
+                </div>
+              </div>
+              <a class="card-footer-link" onclick="switchTab('cases')">
+                <span>View Details</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </a>
+            </div>
+
+            <!-- Playbook 2: Checkout Abandonment -->
+            <div class="playbook-card">
+              <div class="playbook-header">
+                <span class="playbook-title">Checkout Abandonment</span>
+                <span class="badge badge-teal">Active</span>
+              </div>
+              <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                Recovers high-intent carts dropped during payment selection or shipping calculation.
+              </p>
+              <div class="playbook-stats-row">
+                <div class="playbook-stat-item">
+                  <span class="playbook-stat-label">Success Rate</span>
+                  <span class="playbook-stat-val" style="color: var(--primary-purple);">27.5%</span>
+                </div>
+                <div class="playbook-stat-item">
+                  <span class="playbook-stat-label">Cases</span>
+                  <span class="playbook-stat-val">40</span>
+                </div>
+              </div>
+              <a class="card-footer-link" onclick="switchTab('cases')">
+                <span>View Details</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </a>
+            </div>
+
+            <!-- Playbook 3: Invoice Overdue -->
+            <div class="playbook-card">
+              <div class="playbook-header">
+                <span class="playbook-title">Invoice Overdue</span>
+                <span class="badge badge-teal">Active</span>
+              </div>
+              <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                Enterprise B2B receivable recovery with Promise-to-Pay (PTP) tracking & dispute routing.
+              </p>
+              <div class="playbook-stats-row">
+                <div class="playbook-stat-item">
+                  <span class="playbook-stat-label">Success Rate</span>
+                  <span class="playbook-stat-val" style="color: var(--primary-purple);">24.1%</span>
+                </div>
+                <div class="playbook-stat-item">
+                  <span class="playbook-stat-label">Cases</span>
+                  <span class="playbook-stat-val">45</span>
+                </div>
+              </div>
+              <a class="card-footer-link" onclick="switchTab('cases')">
+                <span>View Details</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- TAB 5: WEBHOOK SIMULATOR -->
+        <!-- ===================================================================== -->
+        <section id="tab-simulator" class="tab-content">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Webhook Simulator</h1>
+              <p class="page-subtitle">Simulate real-time events to test dynamic reasoning &amp; guardrails</p>
+            </div>
+          </div>
+
+          <div class="simulator-layout">
+            <!-- Form Column -->
+            <div class="card">
+              <!-- Event Type Pills -->
+              <div class="sim-pills-row" id="sim-type-pills">
+                <button class="sim-pill active" data-type="PAYMENT_FAILURE">Payment Failure</button>
+                <button class="sim-pill" data-type="CHECKOUT_ABANDONMENT">Checkout Abandonment</button>
+                <button class="sim-pill" data-type="INVOICE_OVERDUE">Invoice Overdue</button>
+              </div>
+
+              <!-- Simulator Form Controls -->
+              <div class="sim-form-group">
+                <label class="sim-label" for="sim-input-amount">Amount (₹)</label>
+                <input type="number" class="sim-input" id="sim-input-amount" value="5000">
+              </div>
+
+              <div class="sim-form-group">
+                <label class="sim-label" for="sim-input-reason">Failure Reason</label>
+                <select class="sim-select" id="sim-input-reason">
+                  <option value="NETWORK_TIMEOUT">Network Timeout</option>
+                  <option value="INSUFFICIENT_FUNDS">Insufficient Funds</option>
+                  <option value="CARD_EXPIRED">Card Expired</option>
+                  <option value="HIGH_SHIPPING_COST">High Shipping Cost</option>
+                  <option value="CARD_DECLINED">Bank Declined</option>
+                  <option value="DISPUTED_INVOICE">Disputed Invoice</option>
+                  <option value="OVERDUE_RECEIVABLE">Overdue Receivable</option>
+                </select>
+              </div>
+
+              <div class="sim-form-group">
+                <label class="sim-label" for="sim-input-cust">Customer ID</label>
+                <input type="text" class="sim-input" id="sim-input-cust" value="CUST_1001">
+              </div>
+
+              <div class="sim-form-group">
+                <label class="sim-label" for="sim-input-channel">Channel</label>
+                <select class="sim-select" id="sim-input-channel">
+                  <option value="EMAIL">Email</option>
+                  <option value="WHATSAPP">WhatsApp</option>
+                  <option value="SMS">SMS</option>
+                </select>
+              </div>
+
+              <div style="display: flex; gap: 18px; margin: 8px 0 18px 0; font-size: 12.5px;">
+                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                  <input type="checkbox" id="sim-check-consent" checked>
+                  <span>WhatsApp Consent</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                  <input type="checkbox" id="sim-check-night">
+                  <span>Night DND (22:30)</span>
+                </label>
+              </div>
+
+              <button class="btn btn-primary" id="btn-simulate-event" style="width: 100%;">
+                <span>Simulate Event</span>
+              </button>
+            </div>
+
+            <!-- Preview & Trace Column -->
+            <div class="card">
+              <div class="card-header" style="margin-bottom: 12px;">
+                <div class="card-title">Event Preview</div>
+                <span class="badge badge-purple" id="sim-status-badge">Ready</span>
+              </div>
+
+              <pre class="json-preview-card" id="sim-json-preview">{
+  "event_type": "PAYMENT_FAILURE",
+  "amount": 5000,
+  "failure_reason": "NETWORK_TIMEOUT",
+  "customer_id": "CUST_1001",
+  "channel": "EMAIL"
+}</pre>
+
+              <div class="card-title" style="margin-top: 16px; font-size: 14px;">Live Agent Execution Feed</div>
+              <div class="trace-terminal-feed" id="sim-terminal-feed">
+                <div class="trace-line" style="color: #94A3B8;">&gt; Agent Brain initialized with Gemini 2.5 Flash. Click "Simulate Event" to observe multi-turn recovery.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- TAB 6: AUDIT TRAIL -->
+        <!-- ===================================================================== -->
+        <section id="tab-audit" class="tab-content">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Audit Trail</h1>
+              <p class="page-subtitle">Immutable compliance records for every decision, tool call, and guardrail check</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <!-- Toolbar -->
+            <div class="toolbar-row">
+              <div class="toolbar-left">
+                <div class="search-input-wrap">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                  <input type="text" class="table-search-input" id="audit-search-field" placeholder="Search audit logs...">
+                </div>
+
+                <select class="select-filter-prodify" id="audit-step-filter">
+                  <option value="ALL">All Steps</option>
+                  <option value="OBSERVE">OBSERVE</option>
+                  <option value="REASON">REASON</option>
+                  <option value="PLAN">PLAN</option>
+                  <option value="GUARDRAIL_CHECK">GUARDRAIL_CHECK</option>
+                  <option value="ACT">ACT</option>
+                  <option value="OBSERVE_OUTCOME">OBSERVE_OUTCOME</option>
+                  <option value="CLOSE">CLOSE</option>
+                  <option value="ESCALATE">ESCALATE</option>
+                </select>
+              </div>
+
+              <button class="btn btn-outline btn-sm" id="btn-refresh-audit">
+                <span>Refresh</span>
+              </button>
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive">
+              <table class="prodify-table" id="table-audit-all">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Case ID</th>
+                    <th>Event</th>
+                    <th>Actor</th>
+                    <th>Details</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-audit-all">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+
+            <div class="pagination-row">
+              <button class="page-btn">&lt;</button>
+              <button class="page-btn active">1</button>
+              <button class="page-btn">2</button>
+              <button class="page-btn">3</button>
+              <button class="page-btn">&gt;</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- TAB 7: REPORTS -->
+        <!-- ===================================================================== -->
+        <section id="tab-reports" class="tab-content">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Reports</h1>
+              <p class="page-subtitle">Historical replay evaluation and simulated vs treatment baseline analysis</p>
+            </div>
+            <button class="btn btn-primary btn-sm" id="btn-export-reports">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Export CSV Report</span>
+            </button>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-label">Treatment Resolution Rate</div>
+              <div class="kpi-value" style="color: var(--primary-purple);">26.97%</div>
+              <div class="kpi-trend"><span class="trend-positive">+9.19 pp</span> <span class="trend-context">vs control baseline</span></div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Simulated Control Baseline</div>
+              <div class="kpi-value">17.78%</div>
+              <div class="kpi-trend"><span class="trend-context">20% holdout cohort</span></div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Channel Cost Incurred</div>
+              <div class="kpi-value">₹65.70</div>
+              <div class="kpi-trend"><span class="trend-positive">₹0.37</span> <span class="trend-context">per case avg</span></div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Net Recovery ROI</div>
+              <div class="kpi-value" style="color: var(--accent-teal);">1,835.7x</div>
+              <div class="kpi-trend"><span class="trend-positive">100%</span> <span class="trend-context">guardrail compliance</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- TAB 8: SETTINGS -->
+        <!-- ===================================================================== -->
+        <section id="tab-settings" class="tab-content">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Settings</h1>
+              <p class="page-subtitle">Configure AI agent brain, fail-closed guardrails, and gateway integrations</p>
+            </div>
+          </div>
+
+          <div class="card" style="gap: 20px;">
+            <div class="card-title">Agent Brain Configuration</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div class="sim-form-group">
+                <label class="sim-label">Model Provider</label>
+                <input type="text" class="sim-input" value="Google Gemini 2.5 Flash" readonly>
+              </div>
+              <div class="sim-form-group">
+                <label class="sim-label">Reasoning Strategy</label>
+                <input type="text" class="sim-input" value="ReAct Dynamic Reasoning + CoT" readonly>
+              </div>
+            </div>
+
+            <div class="card-title" style="margin-top: 10px;">Deterministic Compliance Rules (Fail-Closed)</div>
+            <ul style="padding-left: 20px; font-size: 13px; color: var(--text-secondary); line-height: 1.8;">
+              <li><strong>Rule 1 (Opt-Out):</strong> Halts communication immediately if customer has opted out.</li>
+              <li><strong>Rule 2 (Fraud Threshold):</strong> Prevents recovery outreach on fraud risk score &gt; 0.80.</li>
+              <li><strong>Rule 3 (Max Attempts):</strong> Caps total recovery contacts to 3 attempts.</li>
+              <li><strong>Rule 4 (Circuit Breaker):</strong> Escalates to human desk after 5 loop iterations.</li>
+              <li><strong>Rule 5 (Cooldown Interval):</strong> Enforces 2-hour quiet interval between retries.</li>
+              <li><strong>Rule 6 (Telecom DND):</strong> Curfew prevents SMS/WhatsApp between 21:00 and 08:00 (triggers replan to 24/7 Email).</li>
+              <li><strong>Rule 7 (Control Isolation):</strong> Isolates 20% holdout group for unbiased baseline lift measurement.</li>
+              <li><strong>Rule 8 (WhatsApp Consent):</strong> Verifies explicit opt-in before using WhatsApp.</li>
+              <li><strong>Rule 9 (Margin Cap):</strong> Strictly bounds discount incentives to &le; 20.0%.</li>
+            </ul>
+          </div>
+        </section>
+
+      </main>
     </div>
 
-    <div class="drawer-body">
-      <!-- Case Meta Summary -->
-      <div class="case-summary-card" id="drawer-summary-card">
-        <div class="summary-item">
-          <span class="summary-label">Case Status</span>
-          <span class="summary-val" id="drawer-state-val">&mdash;</span>
+    <!-- DEEP CASE TIMELINE DRAWER -->
+    <div class="drawer-backdrop" id="drawer-backdrop"></div>
+    <aside class="timeline-drawer" id="case-timeline-drawer">
+      <div class="drawer-header">
+        <div>
+          <h3 class="drawer-title" id="drawer-case-title">Case Details</h3>
+          <span class="drawer-subtitle" id="drawer-case-subtitle">Deep Chronological Event Timeline</span>
         </div>
-        <div class="summary-item">
-          <span class="summary-label">Amount / Recovered</span>
-          <span class="summary-val" id="drawer-amount-val">&mdash;</span>
-        </div>
-        <div class="summary-item">
-          <span class="summary-label">Customer ID &amp; Segment</span>
-          <span class="summary-val" id="drawer-customer-val">&mdash;</span>
-        </div>
-        <div class="summary-item">
-          <span class="summary-label">Root Cause / Decline</span>
-          <span class="summary-val" id="drawer-decline-val">&mdash;</span>
-        </div>
+        <button class="drawer-close" id="btn-close-drawer">&times;</button>
       </div>
 
-      <!-- Decision Reason Card -->
-      <div style="background-color: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); padding: 12px 14px; border-radius: var(--radius-xs); margin-bottom: 24px;">
-        <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">Agent Decision Reason</div>
-        <div style="font-size: 12px; color: var(--text-primary); line-height: 1.5;" id="drawer-decision-reason-val">&mdash;</div>
-      </div>
+      <div class="drawer-body">
+        <div class="drawer-summary-grid">
+          <div class="drawer-summary-item">
+            <span class="drawer-summary-label">Status</span>
+            <span class="drawer-summary-val" id="drawer-state-val">&mdash;</span>
+          </div>
+          <div class="drawer-summary-item">
+            <span class="drawer-summary-label">Amount / Recovered</span>
+            <span class="drawer-summary-val" id="drawer-amount-val">&mdash;</span>
+          </div>
+          <div class="drawer-summary-item">
+            <span class="drawer-summary-label">Customer ID</span>
+            <span class="drawer-summary-val" id="drawer-customer-val">&mdash;</span>
+          </div>
+          <div class="drawer-summary-item">
+            <span class="drawer-summary-label">Decline Code</span>
+            <span class="drawer-summary-val" id="drawer-decline-val">&mdash;</span>
+          </div>
+        </div>
 
-      <!-- Timeline Track -->
-      <div style="font-size: 13px; font-weight: 600; margin-bottom: 16px; color: var(--text-secondary);">Chronological Execution Sequence</div>
-      <div class="timeline-track" id="drawer-timeline-track">
-        <!-- Rendered dynamically -->
+        <div style="background-color: var(--bg-surface-secondary); border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px;">
+          <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 4px;">Agent Decision Reason</div>
+          <div style="font-size: 12.5px; color: var(--text-primary); line-height: 1.5;" id="drawer-decision-reason-val">&mdash;</div>
+        </div>
+
+        <div style="font-size: 13.5px; font-weight: 600; color: var(--text-primary);">Chronological Execution Sequence</div>
+        <div class="drawer-timeline-track" id="drawer-timeline-track">
+          <!-- Injected via app.js -->
+        </div>
       </div>
-    </div>
-  </aside>
+    </aside>
+
+  </div>
 
   <script src="/static/app.js"></script>
 </body>
