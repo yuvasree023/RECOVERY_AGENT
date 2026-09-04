@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initGlobalSearch();
   initOverviewCharts();
   initOverviewActions();
+  initAgentHero();
   fetchOverviewMetrics();
   fetchCases();
   initSimulator();
@@ -126,6 +127,595 @@ function initOverviewActions() {
   document.getElementById("btn-export-reports")?.addEventListener("click", () => {
     alert("Report exported to CSV: recover_baseline_lift_evaluation.csv");
   });
+}
+
+// ---------------------------------------------------------------------------
+// Hero Centerpiece: Live Agent Reasoning Loop Player
+// ---------------------------------------------------------------------------
+const HERO_SCENARIOS = [
+  {
+    id: "CASE-1042",
+    type: "UPI_PAYMENT_FAIL",
+    typeLabel: "Payment Failure",
+    amount: 3499,
+    customer: "CUST_051 (High LTV)",
+    status: "RESOLVED",
+    statusLabel: "Recovered",
+    statusCls: "badge-teal",
+    stages: [
+      {
+        stage: "OBSERVE",
+        title: "Involuntary decline received: NETWORK_TIMEOUT on NPCI switch",
+        timeOffset: "10:31:02 AM",
+        badgeCls: "hero-step-badge-purple",
+        badgeText: "1. OBSERVE",
+        detail: {
+          event_type: "UPI_PAYMENT_FAIL",
+          gateway: "Razorpay / NPCI",
+          decline_code: "NETWORK_TIMEOUT",
+          customer_ltv: "₹48,200",
+          fraud_score: "0.04 (Safe)"
+        }
+      },
+      {
+        stage: "REASON",
+        title: "Evaluating bounded playbook for high-LTV transient network timeout",
+        timeOffset: "10:31:03 AM",
+        badgeCls: "hero-step-badge-blue",
+        badgeText: "2. REASON",
+        detail: {
+          hypothesis: "Transient banking switch latency. Zero buyer intent degradation.",
+          eligible_channels: "WHATSAPP, SMS, SILENT_RETRY",
+          policy_cap: "Max 3 retry attempts within 4 hours",
+          target_action: "schedule_payment_retry"
+        }
+      },
+      {
+        stage: "PLAN",
+        title: "Proposing bounded action: schedule_payment_retry (T+15m)",
+        timeOffset: "10:31:04 AM",
+        badgeCls: "hero-step-badge-purple",
+        badgeText: "3. PLAN",
+        detail: {
+          tool: "schedule_payment_retry",
+          channel: "AUTO_BANKING_SWITCH",
+          backoff_minutes: "15 mins",
+          discount_enum: "NONE",
+          max_attempts: 3
+        }
+      },
+      {
+        stage: "GUARDRAIL_CHECK",
+        title: "Deterministic Guardrail Engine: 9/9 rules evaluated — 1 VETO triggered (Rule #4 DND Curfew)",
+        timeOffset: "10:31:04 AM",
+        badgeCls: "hero-step-badge-amber",
+        badgeText: "4. GUARDRAIL VETO",
+        detail: {
+          evaluator: "Deterministic 9-Rule Engine (Fail-Closed)",
+          rule_4_dnd: "VETO: Outbound user contact forbidden between 21:00 and 09:00 IST",
+          action_taken: "Execution blocked before side-effect. Rejection fed back to agent."
+        }
+      },
+      {
+        stage: "PLAN",
+        title: "Gemini Adaptive Re-plan: Pivoting from WhatsApp alert to Silent Auto-Retry + morning digest",
+        timeOffset: "10:31:05 AM",
+        badgeCls: "hero-step-badge-blue",
+        badgeText: "4b. ADAPTIVE RE-PLAN",
+        detail: {
+          rejection_feedback: "RULE_4_TRAI_DND_CURFEW",
+          adjusted_plan: "Silent gateway re-query via secondary bank route. Hold user notifications until 09:05 AM.",
+          guardrail_recheck: "PASSED (Silent system call complies with DND)"
+        }
+      },
+      {
+        stage: "ACT",
+        title: "Dispatched silent idempotency-keyed payment retry to backup payment route",
+        timeOffset: "10:31:06 AM",
+        badgeCls: "hero-step-badge-teal",
+        badgeText: "5. ACT",
+        detail: {
+          tool: "schedule_payment_retry",
+          route: "HDFC_DIRECT_SWITCH",
+          idempotency_key: "rec_retry_1042_c8f3",
+          status: "HTTP 202 ACCEPTED"
+        }
+      },
+      {
+        stage: "OBSERVE_OUTCOME",
+        title: "Webhook received: charge.successful — ₹3,499 captured without disturbing customer",
+        timeOffset: "10:31:12 AM",
+        badgeCls: "hero-step-badge-teal",
+        badgeText: "6. OBSERVE OUTCOME",
+        detail: {
+          gateway_event: "payment.captured",
+          recovered_amount: "₹3,499",
+          net_cost: "₹0.00 (Silent API)",
+          terminal_state: "RESOLVED"
+        }
+      }
+    ]
+  },
+  {
+    id: "CASE-1043",
+    type: "CART_ABANDON",
+    typeLabel: "Checkout Abandonment",
+    amount: 2300,
+    customer: "CUST_1022 (Returning Buyer)",
+    status: "ACT",
+    statusLabel: "Recovering",
+    statusCls: "badge-blue",
+    stages: [
+      {
+        stage: "OBSERVE",
+        title: "Checkout session abandoned at shipping tier selection step",
+        timeOffset: "09:58:10 AM",
+        badgeCls: "hero-step-badge-purple",
+        badgeText: "1. OBSERVE",
+        detail: {
+          event_type: "CART_ABANDON",
+          cart_value: "₹2,300",
+          exit_step: "SHIPPING_RATE_SELECT",
+          session_duration: "4m 12s",
+          device: "Mobile Safari (iOS)"
+        }
+      },
+      {
+        stage: "REASON",
+        title: "Segment exhibits price sensitivity to express delivery charges",
+        timeOffset: "09:58:11 AM",
+        badgeCls: "hero-step-badge-blue",
+        badgeText: "2. REASON",
+        detail: {
+          intent_score: "0.82 (High Intent)",
+          margin_buffer: "38%",
+          max_allowed_discount: "10%",
+          recommended_channel: "WHATSAPP"
+        }
+      },
+      {
+        stage: "PLAN",
+        title: "Proposing recovery message with bounded discount enum: FREE_SHIPPING_5PCT",
+        timeOffset: "09:58:12 AM",
+        badgeCls: "hero-step-badge-purple",
+        badgeText: "3. PLAN",
+        detail: {
+          tool: "offer_recovery_discount",
+          channel: "WHATSAPP",
+          template_id: "CART_RECOVERY_EXPRESS_WA",
+          discount_enum: "DISCOUNT_5_PCT",
+          expires_in: "2 hours"
+        }
+      },
+      {
+        stage: "GUARDRAIL_CHECK",
+        title: "Deterministic Guardrail Engine: 9/9 rules evaluated — All PASSED",
+        timeOffset: "09:58:12 AM",
+        badgeCls: "hero-step-badge-teal",
+        badgeText: "4. GUARDRAIL CHECK",
+        detail: {
+          rule_1_consent: "PASSED (WhatsApp opt-in verified)",
+          rule_2_discount_cap: "PASSED (5% <= 10% policy cap)",
+          rule_3_frequency: "PASSED (0 contacts in last 48h)",
+          status: "APPROVED FOR DISPATCH"
+        }
+      },
+      {
+        stage: "ACT",
+        title: "Dispatched personalized WhatsApp interactive template with direct 1-tap checkout link",
+        timeOffset: "09:58:13 AM",
+        badgeCls: "hero-step-badge-teal",
+        badgeText: "5. ACT",
+        detail: {
+          channel: "WHATSAPP_BUSINESS_API",
+          template: "tpl_cart_free_ship_v2",
+          cost: "₹0.85",
+          delivery_status: "DELIVERED"
+        }
+      },
+      {
+        stage: "OBSERVE_OUTCOME",
+        title: "Customer clicked recovery link — checkout resumed in progress",
+        timeOffset: "09:58:25 AM",
+        badgeCls: "hero-step-badge-blue",
+        badgeText: "6. OBSERVE OUTCOME",
+        detail: {
+          click_event: "link_opened",
+          browser_active: true,
+          current_state: "RECOVERING (Awaiting payment authorization)"
+        }
+      }
+    ]
+  },
+  {
+    id: "INV-9021",
+    type: "INVOICE_OVERDUE",
+    typeLabel: "Invoice Overdue",
+    amount: 85000,
+    customer: "ACME Corp (Enterprise Tier)",
+    status: "ESCALATED",
+    statusLabel: "Escalated",
+    statusCls: "badge-rose",
+    stages: [
+      {
+        stage: "OBSERVE",
+        title: "Net-30 Enterprise invoice overdue by 14 days without PTP record",
+        timeOffset: "10:35:01 AM",
+        badgeCls: "hero-step-badge-purple",
+        badgeText: "1. OBSERVE",
+        detail: {
+          invoice_id: "INV-9021",
+          client: "ACME Corp",
+          due_date: "14 days overdue",
+          amount: "₹85,000",
+          prior_notices: 2
+        }
+      },
+      {
+        stage: "REASON",
+        title: "Analyzing account manager notes and accounts payable communication history",
+        timeOffset: "10:35:02 AM",
+        badgeCls: "hero-step-badge-blue",
+        badgeText: "2. REASON",
+        detail: {
+          account_tier: "ENTERPRISE",
+          dispute_flag: "PO_RECONCILIATION_MISMATCH",
+          automated_dunning_limit: "EXCEEDED (Max 2 reminders reached)"
+        }
+      },
+      {
+        stage: "PLAN",
+        title: "Proposing direct dunning call via outbound AI Voice Agent",
+        timeOffset: "10:35:03 AM",
+        badgeCls: "hero-step-badge-purple",
+        badgeText: "3. PLAN",
+        detail: {
+          proposed_tool: "trigger_outbound_voice_call",
+          channel: "VOICE_SYNTHESIS",
+          target: "CFO Direct Line"
+        }
+      },
+      {
+        stage: "GUARDRAIL_CHECK",
+        title: "Guardrail Engine VETO: Rule #7 Enterprise Human-in-the-Loop Threshold (>₹50,000)",
+        timeOffset: "10:35:03 AM",
+        badgeCls: "hero-step-badge-amber",
+        badgeText: "4. GUARDRAIL VETO",
+        detail: {
+          violated_rule: "RULE_7_ENTERPRISE_HITL_THRESHOLD",
+          reason: "Automated robocalls/harassment strictly forbidden for enterprise accounts over ₹50,000",
+          guardrail_action: "FAIL-CLOSED: Action blocked immediately."
+        }
+      },
+      {
+        stage: "PLAN",
+        title: "Gemini Adaptive Re-plan: Proposing escalation to designated Enterprise Account Executive",
+        timeOffset: "10:35:04 AM",
+        badgeCls: "hero-step-badge-blue",
+        badgeText: "4b. ADAPTIVE RE-PLAN",
+        detail: {
+          tool: "escalate_to_human",
+          assignee: "Enterprise AE Desk (Priya Sharma)",
+          brief: "PO mismatch flagged on INV-9021. Requires manual credit memo reconciliation.",
+          guardrail_recheck: "PASSED (Safe human escalation)"
+        }
+      },
+      {
+        stage: "ACT",
+        title: "Created priority ticket in CRM with full context brief & reconciliation dossier",
+        timeOffset: "10:35:05 AM",
+        badgeCls: "hero-step-badge-teal",
+        badgeText: "5. ACT",
+        detail: {
+          ticket_id: "TICK-8841",
+          desk: "Accounts Receivable Human Ops",
+          sla_minutes: 60,
+          customer_notification: "SUPPRESSED (Human handled)"
+        }
+      },
+      {
+        stage: "OBSERVE_OUTCOME",
+        title: "Escalation acknowledged by AE — Promise-to-Pay scheduled for next billing cycle",
+        timeOffset: "10:35:15 AM",
+        badgeCls: "hero-step-badge-rose",
+        badgeText: "6. OBSERVE OUTCOME",
+        detail: {
+          status: "ESCALATED_MANAGED",
+          risk_mitigated: "Relationship protected, zero brand churn risk",
+          resolution_eta: "Within 48h"
+        }
+      }
+    ]
+  },
+  {
+    id: "CASE-1049",
+    type: "UPI_PAYMENT_FAIL",
+    typeLabel: "Payment Failure",
+    amount: 14999,
+    customer: "CUST_9918 (Flagged IP)",
+    status: "TERMINATED",
+    statusLabel: "Quarantined",
+    statusCls: "badge-amber",
+    stages: [
+      {
+        stage: "OBSERVE",
+        title: "High-value checkout attempt from anonymized proxy subnet with card velocity spike",
+        timeOffset: "11:02:14 AM",
+        badgeCls: "hero-step-badge-purple",
+        badgeText: "1. OBSERVE",
+        detail: {
+          amount: "₹14,999",
+          fraud_score: "0.94 (Critical Risk)",
+          card_bin_country: "NG",
+          shipping_country: "IN",
+          velocity: "6 attempts in 90 seconds"
+        }
+      },
+      {
+        stage: "REASON",
+        title: "High fraud probability — risk engine flags credential stuffing vector",
+        timeOffset: "11:02:15 AM",
+        badgeCls: "hero-step-badge-blue",
+        badgeText: "2. REASON",
+        detail: {
+          risk_band: "CRITICAL_FRAUD",
+          recommendation: "Immediate quarantine. Suppress all retry & discount mechanisms."
+        }
+      },
+      {
+        stage: "PLAN",
+        title: "Proposing standard card decline SMS with update payment link",
+        timeOffset: "11:02:15 AM",
+        badgeCls: "hero-step-badge-purple",
+        badgeText: "3. PLAN",
+        detail: {
+          proposed_tool: "send_recovery_message",
+          channel: "SMS",
+          template: "GENERIC_CARD_FAIL_SMS"
+        }
+      },
+      {
+        stage: "GUARDRAIL_CHECK",
+        title: "Guardrail Engine VETO: Rule #1 Zero-Tolerance Fraud Quarantine (Score 0.94 > 0.80)",
+        timeOffset: "11:02:16 AM",
+        badgeCls: "hero-step-badge-amber",
+        badgeText: "4. GUARDRAIL VETO",
+        detail: {
+          violated_rule: "RULE_1_FRAUD_SCORE_QUARANTINE",
+          threshold: "0.80",
+          actual: "0.94",
+          fail_closed_action: "BLOCK ALL OUTBOUND CONTACT & PAYMENT RETRIES PERMANENTLY"
+        }
+      },
+      {
+        stage: "ACT",
+        title: "Case instantly quarantined — blacklisted IP session and notified Security Desk",
+        timeOffset: "11:02:17 AM",
+        badgeCls: "hero-step-badge-teal",
+        badgeText: "5. ACT",
+        detail: {
+          action: "quarantine_and_blacklist",
+          chargeback_prevention_value: "₹14,999",
+          zero_outbound_sent: true
+        }
+      },
+      {
+        stage: "OBSERVE_OUTCOME",
+        title: "Terminal quarantine confirmed — zero revenue loss or chargeback penalty",
+        timeOffset: "11:02:18 AM",
+        badgeCls: "hero-step-badge-amber",
+        badgeText: "6. OBSERVE OUTCOME",
+        detail: {
+          state: "TERMINATED_FRAUD_QUARANTINE",
+          security_incident_id: "SEC-4192",
+          compliance: "100% fail-closed"
+        }
+      }
+    ]
+  }
+];
+
+let heroCurrentScenarioIdx = 0;
+let heroPlaybackTimer = null;
+let heroAutoCycleTimer = null;
+
+function initAgentHero() {
+  const replayBtn = document.getElementById("btn-hero-replay");
+  const inspectBtn = document.getElementById("btn-hero-inspect");
+  const scenarioChips = document.querySelectorAll("#hero-scenarios-bar .scenario-chip");
+  const autoToggle = document.getElementById("hero-toggle-autocycle");
+
+  // Replay another case button
+  replayBtn?.addEventListener("click", () => {
+    heroCurrentScenarioIdx = (heroCurrentScenarioIdx + 1) % HERO_SCENARIOS.length;
+    playHeroScenario(heroCurrentScenarioIdx, true);
+    resetAutoCycle();
+  });
+
+  // Inspect drawer button
+  inspectBtn?.addEventListener("click", () => {
+    const sc = HERO_SCENARIOS[heroCurrentScenarioIdx];
+    if (sc) openCaseDrawer(sc.id);
+  });
+
+  // Scenario chips
+  scenarioChips.forEach((chip, idx) => {
+    chip.addEventListener("click", () => {
+      heroCurrentScenarioIdx = idx;
+      playHeroScenario(idx, true);
+      resetAutoCycle();
+    });
+  });
+
+  // Auto-cycle toggle
+  autoToggle?.addEventListener("change", () => {
+    if (autoToggle.checked) {
+      startAutoCycle();
+    } else {
+      stopAutoCycle();
+    }
+  });
+
+  // Initial playback
+  playHeroScenario(0, true);
+  startAutoCycle();
+}
+
+function startAutoCycle() {
+  stopAutoCycle();
+  heroAutoCycleTimer = setInterval(() => {
+    const autoToggle = document.getElementById("hero-toggle-autocycle");
+    if (activeTab === "overview" && autoToggle && autoToggle.checked) {
+      heroCurrentScenarioIdx = (heroCurrentScenarioIdx + 1) % HERO_SCENARIOS.length;
+      playHeroScenario(heroCurrentScenarioIdx, true);
+    }
+  }, 9000);
+}
+
+function stopAutoCycle() {
+  if (heroAutoCycleTimer) {
+    clearInterval(heroAutoCycleTimer);
+    heroAutoCycleTimer = null;
+  }
+}
+
+function resetAutoCycle() {
+  const autoToggle = document.getElementById("hero-toggle-autocycle");
+  if (autoToggle && autoToggle.checked) {
+    startAutoCycle();
+  }
+}
+
+function updateRibbonNode(stageName, isDone, isActive) {
+  const stageMap = {
+    OBSERVE: "stage-node-observe",
+    REASON: "stage-node-reason",
+    PLAN: "stage-node-plan",
+    GUARDRAIL_CHECK: "stage-node-guardrail",
+    ACT: "stage-node-act",
+    OBSERVE_OUTCOME: "stage-node-outcome"
+  };
+
+  const nodeId = stageMap[stageName];
+  if (!nodeId) return;
+  const el = document.getElementById(nodeId);
+  if (!el) return;
+
+  el.classList.toggle("done", isDone);
+  el.classList.toggle("active", isActive);
+}
+
+function resetRibbon() {
+  const ids = ["stage-node-observe", "stage-node-reason", "stage-node-plan", "stage-node-guardrail", "stage-node-act", "stage-node-outcome"];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.remove("active", "done");
+    }
+  });
+}
+
+function playHeroScenario(scenarioIndex, animated = true) {
+  if (heroPlaybackTimer) {
+    clearInterval(heroPlaybackTimer);
+    heroPlaybackTimer = null;
+  }
+
+  const sc = HERO_SCENARIOS[scenarioIndex];
+  if (!sc) return;
+
+  // Update scenario chips UI
+  const chips = document.querySelectorAll("#hero-scenarios-bar .scenario-chip");
+  chips.forEach((c, i) => c.classList.toggle("active", i === scenarioIndex));
+
+  // Update metadata bar
+  const metaCaseId = document.getElementById("hero-meta-case-id");
+  const metaEventType = document.getElementById("hero-meta-event-type");
+  const metaAmount = document.getElementById("hero-meta-amount");
+  const metaCustomer = document.getElementById("hero-meta-customer");
+  const metaStatus = document.getElementById("hero-meta-status");
+
+  if (metaCaseId) metaCaseId.innerText = sc.id;
+  if (metaEventType) metaEventType.innerText = sc.typeLabel;
+  if (metaAmount) metaAmount.innerText = `₹${Number(sc.amount).toLocaleString("en-IN")}`;
+  if (metaCustomer) metaCustomer.innerText = sc.customer;
+  if (metaStatus) {
+    metaStatus.className = `badge ${sc.statusCls}`;
+    metaStatus.innerText = `State: ${sc.status}`;
+  }
+
+  const feed = document.getElementById("hero-feed-stream");
+  if (!feed) return;
+  feed.innerHTML = "";
+  resetRibbon();
+
+  if (!animated) {
+    // Render all immediately
+    sc.stages.forEach(st => {
+      appendHeroStep(feed, st);
+    });
+    // Set all nodes to done
+    ["OBSERVE", "REASON", "PLAN", "GUARDRAIL_CHECK", "ACT", "OBSERVE_OUTCOME"].forEach(s => updateRibbonNode(s, true, false));
+    return;
+  }
+
+  let stepIdx = 0;
+  const totalSteps = sc.stages.length;
+
+  // Step 0 immediately
+  const firstStep = sc.stages[0];
+  appendHeroStep(feed, firstStep);
+  updateRibbonNode(firstStep.stage, false, true);
+  stepIdx++;
+
+  heroPlaybackTimer = setInterval(() => {
+    if (stepIdx >= totalSteps) {
+      clearInterval(heroPlaybackTimer);
+      heroPlaybackTimer = null;
+      // Mark last ribbon item active / done
+      return;
+    }
+
+    const currentStep = sc.stages[stepIdx];
+    const prevStep = sc.stages[stepIdx - 1];
+
+    if (prevStep) {
+      updateRibbonNode(prevStep.stage, true, false);
+    }
+    updateRibbonNode(currentStep.stage, false, true);
+
+    appendHeroStep(feed, currentStep);
+    stepIdx++;
+  }, 950);
+}
+
+function appendHeroStep(feed, step) {
+  const row = document.createElement("div");
+  row.className = "hero-step-row";
+
+  // Build detail key-value pills
+  let detailHtml = "";
+  if (step.detail && typeof step.detail === "object") {
+    const items = Object.entries(step.detail).map(([k, v]) => {
+      const label = k.replace(/_/g, " ");
+      return `<div class="hero-detail-item"><span class="hero-detail-key">${label}:</span> <span class="hero-detail-val">${v}</span></div>`;
+    }).join("");
+    detailHtml = `<div class="hero-step-details">${items}</div>`;
+  }
+
+  row.innerHTML = `
+    <div class="hero-step-header">
+      <div class="hero-step-title-group">
+        <span class="hero-step-badge ${step.badgeCls || 'hero-step-badge-purple'}">${step.badgeText}</span>
+        <span class="hero-step-title">${step.title}</span>
+      </div>
+      <span class="hero-step-time">${step.timeOffset}</span>
+    </div>
+    ${detailHtml}
+  `;
+
+  feed.appendChild(row);
+  feed.scrollTop = feed.scrollHeight;
 }
 
 // ---------------------------------------------------------------------------
