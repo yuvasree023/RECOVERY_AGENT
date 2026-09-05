@@ -99,14 +99,7 @@
         </button>
       </nav>
 
-      <!-- Upgrade Plan Card -->
       <div class="sidebar-footer">
-        <div class="upgrade-card" id="sidebar-upgrade-card">
-          <div class="upgrade-title">Upgrade Plan</div>
-          <div class="upgrade-desc">Unlock advanced insights, custom playbooks and priority support.</div>
-          <button class="btn-upgrade" id="btn-upgrade-plan">Upgrade Now</button>
-        </div>
-
         <div class="sidebar-help-link" id="btn-sidebar-help">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"></circle>
@@ -132,14 +125,38 @@
         </div>
 
         <div class="topbar-right">
-          <!-- Topbar Login Button matching image.png -->
-          <button class="topbar-login-btn" id="btn-topbar-login" title="User Login">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="8" r="4"/>
-              <path d="M20 21a8 8 0 0 0-16 0"/>
+          <!-- Persistent Trust Signal: Guardrails Active -->
+          <div class="topbar-trust-badge" id="topbar-guardrails-badge" onclick="switchTab('settings')" title="Click to inspect 9 deterministic compliance guardrails in Settings">
+            <span class="trust-badge-dot"></span>
+            <span class="trust-badge-text">Guardrails: <strong>9/9 active</strong></span>
+          </div>
+
+          <!-- Notification Bell -->
+          <button class="topbar-icon-btn" id="btn-notifications" title="Notifications">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
             </svg>
-            <span>Log in</span>
+            <span class="topbar-badge-dot"></span>
           </button>
+
+          <!-- Help Icon -->
+          <button class="topbar-icon-btn" id="btn-topbar-help" title="Help">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </button>
+
+          <!-- User Profile -->
+          <div class="topbar-profile" id="user-profile-widget">
+            <div class="profile-avatar" id="user-avatar">CH</div>
+            <div class="profile-info">
+              <span class="profile-name">Courtney Henry</span>
+              <span class="profile-role">Admin</span>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -150,37 +167,27 @@
         <!-- TAB 1: AGENT (LIVE REASONING & RECOVERY ENGINE) -->
         <!-- ===================================================================== -->
         <section id="tab-overview" class="tab-content active">
-          <!-- Page Header matching image.png -->
+          <!-- Page Header -->
           <div class="page-header">
             <div>
               <h1 class="page-title">Agent</h1>
               <p class="page-subtitle">Autonomous bounded revenue recovery engine with Gemini reasoning &amp; fail-closed guardrails</p>
             </div>
-            <div class="page-header-right">
-              <!-- Persistent Trust Signal: Guardrails Active placed above buttons -->
-              <div class="page-header-trust-badge" id="page-guardrails-badge" onclick="switchTab('settings')" title="Click to inspect 9 deterministic compliance guardrails in Settings">
-                <span class="trust-badge-dot"></span>
-                <span class="trust-badge-text">Guardrails: <strong>9/9 active</strong></span>
-              </div>
-              <div class="page-actions">
-                <button class="btn btn-primary" id="btn-new-recovery">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                  </svg>
-                  <span>New Recovery</span>
-                </button>
-                <button class="btn btn-outline" id="btn-view-reports">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                    <polyline points="10 9 9 9 8 9"></polyline>
-                  </svg>
-                  <span>View Reports</span>
-                </button>
-              </div>
+            <div class="page-actions">
+              <button class="btn btn-primary" id="btn-new-recovery">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>New Recovery</span>
+              </button>
+              <button class="btn btn-outline" id="btn-view-reports">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                <span>View Reports</span>
+              </button>
             </div>
           </div>
 
@@ -188,113 +195,85 @@
           <!-- 1. HERO CENTERPIECE: WATCH THE AGENT DECIDE (LIVE REASONING LOOP) -->
           <!-- ================================================================= -->
           <div class="hero-agent-card" id="card-hero-agent">
-            <!-- Hero Header matching image.png -->
+            <!-- Hero Header -->
             <div class="hero-agent-header">
-              <div class="hero-eyebrow">
-                <span class="hero-live-dot"></span>
-                <span>LIVE AGENT REASONING LOOP</span>
-              </div>
-              <h2 class="hero-title">Watch the agent decide</h2>
-              
-              <!-- Badges row -->
-              <div class="hero-case-meta" id="hero-case-meta-bar">
-                <span class="badge badge-purple" id="hero-meta-case-id">CASE-1043</span>
-                <span class="badge badge-blue" id="hero-meta-event-type">Checkout Abandonment</span>
-                <span class="badge badge-teal" id="hero-meta-amount">₹2,300</span>
-                <span class="badge badge-purple" id="hero-meta-customer">CUST_1022 (Returning Buyer)</span>
-                <span class="badge badge-blue" id="hero-meta-status">State: ACT</span>
+              <div class="hero-title-group">
+                <div class="hero-eyebrow">
+                  <span class="hero-live-dot"></span>
+                  <span>Live Agent Reasoning Loop</span>
+                </div>
+                <h2 class="hero-title">Watch the agent decide</h2>
+                <div class="hero-case-meta" id="hero-case-meta-bar">
+                  <span class="badge badge-purple" id="hero-meta-case-id">CASE-1042</span>
+                  <span class="badge badge-blue" id="hero-meta-event-type">Payment Failure</span>
+                  <span class="badge badge-teal" id="hero-meta-amount">₹3,499</span>
+                  <span class="badge badge-purple" id="hero-meta-customer">CUST_051 (High LTV)</span>
+                  <span class="badge badge-amber" id="hero-meta-status">State: RESOLVED</span>
+                </div>
               </div>
 
-              <!-- Controls row directly beneath badges -->
-              <div class="hero-controls-row">
+              <!-- Controls -->
+              <div class="hero-controls">
                 <label class="hero-auto-toggle" title="Automatically step through cases from historical data">
                   <input type="checkbox" id="hero-toggle-autocycle" checked>
                   <span>Auto-cycle (8s)</span>
                 </label>
-                <button class="btn btn-outline btn-sm hero-btn-replay" id="btn-hero-replay" title="Load another case from the dataset">
+                <button class="btn btn-outline btn-sm" id="btn-hero-replay" title="Load another case from the dataset">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
                   </svg>
                   <span>Replay another case</span>
                 </button>
-                <button class="btn btn-primary btn-sm hero-btn-inspect" id="btn-hero-inspect">
+                <button class="btn btn-primary btn-sm" id="btn-hero-inspect">
                   <span>Inspect Full Trace &rarr;</span>
                 </button>
               </div>
             </div>
 
-            <!-- Horizontal Stepper Ribbon with Numbered Circles & Connecting Lines -->
-            <div class="hero-stepper-container" id="hero-stepper-track">
-              <div class="hero-step-node active" data-step="0" id="step-node-0">
-                <div class="step-circle">1</div>
-                <div class="step-label">OBSERVE</div>
-                <div class="step-active-indicator"></div>
+            <!-- State Machine Pipeline Ribbon -->
+            <div class="hero-pipeline-ribbon" id="hero-pipeline-track">
+              <div class="hero-stage-item active" data-stage="OBSERVE" id="stage-node-observe">
+                <span>1. OBSERVE</span>
               </div>
-              <div class="step-connector">
-                <svg width="24" height="12" viewBox="0 0 24 12" fill="none">
-                  <line x1="0" y1="6" x2="20" y2="6" stroke="#E5E7EB" stroke-width="1.5"/>
-                  <polyline points="16,2 20,6 16,10" fill="none" stroke="#E5E7EB" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-              </div>
+              <span class="hero-stage-arrow">&rarr;</span>
 
-              <div class="hero-step-node" data-step="1" id="step-node-1">
-                <div class="step-circle">2</div>
-                <div class="step-label">REASON</div>
-                <div class="step-active-indicator"></div>
+              <div class="hero-stage-item" data-stage="REASON" id="stage-node-reason">
+                <span>2. REASON</span>
               </div>
-              <div class="step-connector">
-                <svg width="24" height="12" viewBox="0 0 24 12" fill="none">
-                  <line x1="0" y1="6" x2="20" y2="6" stroke="#E5E7EB" stroke-width="1.5"/>
-                  <polyline points="16,2 20,6 16,10" fill="none" stroke="#E5E7EB" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-              </div>
+              <span class="hero-stage-arrow">&rarr;</span>
 
-              <div class="hero-step-node" data-step="2" id="step-node-2">
-                <div class="step-circle">3</div>
-                <div class="step-label">PLAN</div>
-                <div class="step-active-indicator"></div>
+              <div class="hero-stage-item" data-stage="PLAN" id="stage-node-plan">
+                <span>3. PLAN</span>
               </div>
-              <div class="step-connector">
-                <svg width="24" height="12" viewBox="0 0 24 12" fill="none">
-                  <line x1="0" y1="6" x2="20" y2="6" stroke="#E5E7EB" stroke-width="1.5"/>
-                  <polyline points="16,2 20,6 16,10" fill="none" stroke="#E5E7EB" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-              </div>
+              <span class="hero-stage-arrow">&rarr;</span>
 
-              <div class="hero-step-node" data-step="3" id="step-node-3">
-                <div class="step-circle">4</div>
-                <div class="step-label">GUARDRAIL CHECK</div>
-                <div class="step-active-indicator"></div>
+              <div class="hero-stage-item" data-stage="GUARDRAIL_CHECK" id="stage-node-guardrail">
+                <span>4. GUARDRAIL CHECK</span>
               </div>
-              <div class="step-connector">
-                <svg width="24" height="12" viewBox="0 0 24 12" fill="none">
-                  <line x1="0" y1="6" x2="20" y2="6" stroke="#E5E7EB" stroke-width="1.5"/>
-                  <polyline points="16,2 20,6 16,10" fill="none" stroke="#E5E7EB" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-              </div>
+              <span class="hero-stage-arrow">&rarr;</span>
 
-              <div class="hero-step-node" data-step="4" id="step-node-4">
-                <div class="step-circle">5</div>
-                <div class="step-label">ACT</div>
-                <div class="step-active-indicator"></div>
+              <div class="hero-stage-item" data-stage="ACT" id="stage-node-act">
+                <span>5. ACT</span>
               </div>
-              <div class="step-connector">
-                <svg width="24" height="12" viewBox="0 0 24 12" fill="none">
-                  <line x1="0" y1="6" x2="20" y2="6" stroke="#E5E7EB" stroke-width="1.5"/>
-                  <polyline points="16,2 20,6 16,10" fill="none" stroke="#E5E7EB" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-              </div>
+              <span class="hero-stage-arrow">&rarr;</span>
 
-              <div class="hero-step-node" data-step="5" id="step-node-5">
-                <div class="step-circle">6</div>
-                <div class="step-label">OBSERVE OUTCOME</div>
-                <div class="step-active-indicator"></div>
+              <div class="hero-stage-item" data-stage="OBSERVE_OUTCOME" id="stage-node-outcome">
+                <span>6. OBSERVE OUTCOME</span>
               </div>
             </div>
 
-            <!-- Active Step Detail Card Container (Rendered dynamically in app.js) -->
-            <div class="hero-active-step-card" id="hero-active-step-card">
-              <!-- Dynamically populated in app.js -->
+            <!-- Animated Step Feed Stream -->
+            <div class="hero-feed-container" id="hero-feed-stream">
+              <!-- Dynamically rendered and animated step-by-step in app.js -->
+            </div>
+
+            <!-- Quick Real Scenarios Selector -->
+            <div class="hero-quick-scenarios" id="hero-scenarios-bar">
+              <span class="scenario-label">Quick case scenarios:</span>
+              <button class="scenario-chip active" data-scenario="0">DND Curfew Veto &amp; Adaptive Re-plan</button>
+              <button class="scenario-chip" data-scenario="1">Gateway Timeout Multi-Attempt Retry</button>
+              <button class="scenario-chip" data-scenario="2">B2B Invoice Overdue &amp; PTP Agreed</button>
+              <button class="scenario-chip" data-scenario="3">Fraud Risk Quarantined (Fail-Closed)</button>
             </div>
           </div>
 
