@@ -104,10 +104,6 @@ function initOverviewActions() {
     switchTab("agent-runs");
   });
 
-  document.getElementById("btn-upgrade-plan")?.addEventListener("click", () => {
-    alert("Recover Enterprise Plan: Contact revenue-recovery@recover.ai to enable unlimited webhook bandwidth, multi-agent parallel reasoning, and custom CRM webhooks.");
-  });
-
   document.getElementById("btn-sidebar-help")?.addEventListener("click", () => {
     switchTab("settings");
   });
