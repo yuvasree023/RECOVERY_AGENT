@@ -104,6 +104,10 @@ function initOverviewActions() {
     switchTab("agent-runs");
   });
 
+  document.getElementById("btn-upgrade-plan")?.addEventListener("click", () => {
+    alert("Recover Enterprise Plan: Contact revenue-recovery@recover.ai to enable unlimited webhook bandwidth, multi-agent parallel reasoning, and custom CRM webhooks.");
+  });
+
   document.getElementById("btn-sidebar-help")?.addEventListener("click", () => {
     switchTab("settings");
   });
@@ -126,112 +130,44 @@ function initOverviewActions() {
 }
 
 // ---------------------------------------------------------------------------
-// Hero Centerpiece: Live Agent Reasoning Loop Player
 // ---------------------------------------------------------------------------
+// Hero Centerpiece: Live Agent Reasoning Loop Player (Matching image.png)
+// ---------------------------------------------------------------------------
+
+const HERO_ICONS = {
+  clock: `<svg class="step-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`,
+  calendar: `<svg class="step-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`,
+  cart: `<svg class="step-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>`,
+  exit: `<svg class="step-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>`,
+  stopwatch: `<svg class="step-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>`,
+  user: `<svg class="step-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`,
+  trend: `<svg class="step-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>`,
+  tag: `<svg class="step-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>`,
+  message: `<svg class="step-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`,
+  gift: `<svg class="step-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>`,
+  tool: `<svg class="step-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>`,
+  phone: `<svg class="step-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>`,
+  file: `<svg class="step-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`,
+  percent: `<svg class="step-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="5" x2="5" y2="19"></line><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg>`,
+  timer: `<svg class="step-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 10"></polyline></svg>`,
+  shield: `<svg class="step-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`,
+  check: `<svg class="step-row-icon" style="color: #10B981;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`,
+  alert: `<svg class="step-row-icon" style="color: #F59E0B;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`,
+  send: `<svg class="step-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`,
+  hash: `<svg class="step-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>`,
+  card: `<svg class="step-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>`,
+  mouse: `<svg class="step-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"></path><path d="M13 13l6 6"></path></svg>`,
+  dollar: `<svg class="step-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>`,
+  flag: `<svg class="step-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>`,
+  eye: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
+  brain: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.04z"></path><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.04z"></path></svg>`,
+  plan: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`,
+  guardrail: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`,
+  act: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`,
+  outcome: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`
+};
+
 const HERO_SCENARIOS = [
-  {
-    id: "CASE-1042",
-    type: "UPI_PAYMENT_FAIL",
-    typeLabel: "Payment Failure",
-    amount: 3499,
-    customer: "CUST_051 (High LTV)",
-    status: "RESOLVED",
-    statusLabel: "Recovered",
-    statusCls: "badge-teal",
-    stages: [
-      {
-        stage: "OBSERVE",
-        title: "Involuntary decline received: NETWORK_TIMEOUT on NPCI switch",
-        timeOffset: "10:31:02 AM",
-        badgeCls: "hero-step-badge-purple",
-        badgeText: "1. OBSERVE",
-        detail: {
-          event_type: "UPI_PAYMENT_FAIL",
-          gateway: "Razorpay / NPCI",
-          decline_code: "NETWORK_TIMEOUT",
-          customer_ltv: "₹48,200",
-          fraud_score: "0.04 (Safe)"
-        }
-      },
-      {
-        stage: "REASON",
-        title: "Evaluating bounded playbook for high-LTV transient network timeout",
-        timeOffset: "10:31:03 AM",
-        badgeCls: "hero-step-badge-blue",
-        badgeText: "2. REASON",
-        detail: {
-          hypothesis: "Transient banking switch latency. Zero buyer intent degradation.",
-          eligible_channels: "WHATSAPP, SMS, SILENT_RETRY",
-          policy_cap: "Max 3 retry attempts within 4 hours",
-          target_action: "schedule_payment_retry"
-        }
-      },
-      {
-        stage: "PLAN",
-        title: "Proposing bounded action: schedule_payment_retry (T+15m)",
-        timeOffset: "10:31:04 AM",
-        badgeCls: "hero-step-badge-purple",
-        badgeText: "3. PLAN",
-        detail: {
-          tool: "schedule_payment_retry",
-          channel: "AUTO_BANKING_SWITCH",
-          backoff_minutes: "15 mins",
-          discount_enum: "NONE",
-          max_attempts: 3
-        }
-      },
-      {
-        stage: "GUARDRAIL_CHECK",
-        title: "Deterministic Guardrail Engine: 9/9 rules evaluated — 1 VETO triggered (Rule #4 DND Curfew)",
-        timeOffset: "10:31:04 AM",
-        badgeCls: "hero-step-badge-amber",
-        badgeText: "4. GUARDRAIL VETO",
-        detail: {
-          evaluator: "Deterministic 9-Rule Engine (Fail-Closed)",
-          rule_4_dnd: "VETO: Outbound user contact forbidden between 21:00 and 09:00 IST",
-          action_taken: "Execution blocked before side-effect. Rejection fed back to agent."
-        }
-      },
-      {
-        stage: "PLAN",
-        title: "Gemini Adaptive Re-plan: Pivoting from WhatsApp alert to Silent Auto-Retry + morning digest",
-        timeOffset: "10:31:05 AM",
-        badgeCls: "hero-step-badge-blue",
-        badgeText: "4b. ADAPTIVE RE-PLAN",
-        detail: {
-          rejection_feedback: "RULE_4_TRAI_DND_CURFEW",
-          adjusted_plan: "Silent gateway re-query via secondary bank route. Hold user notifications until 09:05 AM.",
-          guardrail_recheck: "PASSED (Silent system call complies with DND)"
-        }
-      },
-      {
-        stage: "ACT",
-        title: "Dispatched silent idempotency-keyed payment retry to backup payment route",
-        timeOffset: "10:31:06 AM",
-        badgeCls: "hero-step-badge-teal",
-        badgeText: "5. ACT",
-        detail: {
-          tool: "schedule_payment_retry",
-          route: "HDFC_DIRECT_SWITCH",
-          idempotency_key: "rec_retry_1042_c8f3",
-          status: "HTTP 202 ACCEPTED"
-        }
-      },
-      {
-        stage: "OBSERVE_OUTCOME",
-        title: "Webhook received: charge.successful — ₹3,499 captured without disturbing customer",
-        timeOffset: "10:31:12 AM",
-        badgeCls: "hero-step-badge-teal",
-        badgeText: "6. OBSERVE OUTCOME",
-        detail: {
-          gateway_event: "payment.captured",
-          recovered_amount: "₹3,499",
-          net_cost: "₹0.00 (Silent API)",
-          terminal_state: "RESOLVED"
-        }
-      }
-    ]
-  },
   {
     id: "CASE-1043",
     type: "CART_ABANDON",
@@ -241,85 +177,205 @@ const HERO_SCENARIOS = [
     status: "ACT",
     statusLabel: "Recovering",
     statusCls: "badge-blue",
-    stages: [
+    steps: [
       {
-        stage: "OBSERVE",
-        title: "Checkout session abandoned at shipping tier selection step",
-        timeOffset: "09:58:10 AM",
-        badgeCls: "hero-step-badge-purple",
-        badgeText: "1. OBSERVE",
-        detail: {
-          event_type: "CART_ABANDON",
-          cart_value: "₹2,300",
-          exit_step: "SHIPPING_RATE_SELECT",
-          session_duration: "4m 12s",
-          device: "Mobile Safari (iOS)"
-        }
+        num: 1,
+        name: "OBSERVE",
+        headerTitle: "1. OBSERVE",
+        headerIcon: HERO_ICONS.eye,
+        rows: [
+          { icon: HERO_ICONS.clock, text: "09:58:10 AM" },
+          { icon: HERO_ICONS.calendar, text: "event type: <strong>CART_ABANDON</strong>" },
+          { icon: HERO_ICONS.cart, text: "cart value: <strong>₹2,300</strong>" },
+          { icon: HERO_ICONS.exit, text: "exit step: <strong>SHIPPING_RATE_SELECT</strong>" },
+          { icon: HERO_ICONS.stopwatch, text: "session duration: <strong>4m 12s</strong>" },
+          { icon: HERO_ICONS.user, text: "customer: <strong>CUST_1022 (Returning Buyer)</strong>" }
+        ],
+        calloutTitle: "What happened?",
+        calloutDesc: "Customer abandoned checkout while selecting shipping rate. High intent signal detected."
       },
       {
-        stage: "REASON",
-        title: "Segment exhibits price sensitivity to express delivery charges",
-        timeOffset: "09:58:11 AM",
-        badgeCls: "hero-step-badge-blue",
-        badgeText: "2. REASON",
-        detail: {
-          intent_score: "0.82 (High Intent)",
-          margin_buffer: "38%",
-          max_allowed_discount: "10%",
-          recommended_channel: "WHATSAPP"
-        }
+        num: 2,
+        name: "REASON",
+        headerTitle: "2. REASON",
+        headerIcon: HERO_ICONS.brain,
+        rows: [
+          { icon: HERO_ICONS.clock, text: "09:58:11 AM" },
+          { icon: HERO_ICONS.trend, text: "intent score: <strong>0.82 (High Intent)</strong>" },
+          { icon: HERO_ICONS.user, text: "customer segment: <strong>Returning Buyer (2 prior purchases)</strong>" },
+          { icon: HERO_ICONS.tag, text: "price sensitivity: <strong>Express Shipping Charges</strong>" },
+          { icon: HERO_ICONS.message, text: "eligible channels: <strong>WHATSAPP, SMS</strong>" },
+          { icon: HERO_ICONS.gift, text: "recommended action: <strong>Offer Free Express Shipping</strong>" }
+        ],
+        calloutTitle: "What happened?",
+        calloutDesc: "Segment analysis indicates friction caused by unexpected express shipping fee. Strong purchase intent justifies targeted shipping incentive."
       },
       {
-        stage: "PLAN",
-        title: "Proposing recovery message with bounded discount enum: FREE_SHIPPING_5PCT",
-        timeOffset: "09:58:12 AM",
-        badgeCls: "hero-step-badge-purple",
-        badgeText: "3. PLAN",
-        detail: {
-          tool: "offer_recovery_discount",
-          channel: "WHATSAPP",
-          template_id: "CART_RECOVERY_EXPRESS_WA",
-          discount_enum: "DISCOUNT_5_PCT",
-          expires_in: "2 hours"
-        }
+        num: 3,
+        name: "PLAN",
+        headerTitle: "3. PLAN",
+        headerIcon: HERO_ICONS.plan,
+        rows: [
+          { icon: HERO_ICONS.clock, text: "09:58:12 AM" },
+          { icon: HERO_ICONS.tool, text: "proposed tool: <strong>offer_recovery_discount</strong>" },
+          { icon: HERO_ICONS.phone, text: "channel enum: <strong>WHATSAPP_BUSINESS_API</strong>" },
+          { icon: HERO_ICONS.file, text: "template ID: <strong>CART_RECOVERY_EXPRESS_WA</strong>" },
+          { icon: HERO_ICONS.percent, text: "bounded discount: <strong>DISCOUNT_5_PCT</strong>" },
+          { icon: HERO_ICONS.timer, text: "expires in: <strong>2 hours</strong>" }
+        ],
+        calloutTitle: "What happened?",
+        calloutDesc: "Agent formulated structured recovery proposal adhering strictly to bounded schema: WhatsApp channel with 5% free-shipping coupon valid for 2 hours."
       },
       {
-        stage: "GUARDRAIL_CHECK",
-        title: "Deterministic Guardrail Engine: 9/9 rules evaluated — All PASSED",
-        timeOffset: "09:58:12 AM",
-        badgeCls: "hero-step-badge-teal",
-        badgeText: "4. GUARDRAIL CHECK",
-        detail: {
-          rule_1_consent: "PASSED (WhatsApp opt-in verified)",
-          rule_2_discount_cap: "PASSED (5% <= 10% policy cap)",
-          rule_3_frequency: "PASSED (0 contacts in last 48h)",
-          status: "APPROVED FOR DISPATCH"
-        }
+        num: 4,
+        name: "GUARDRAIL CHECK",
+        headerTitle: "4. GUARDRAIL CHECK",
+        headerIcon: HERO_ICONS.guardrail,
+        rows: [
+          { icon: HERO_ICONS.clock, text: "09:58:12 AM" },
+          { icon: HERO_ICONS.shield, text: "guardrail evaluation: <strong>9 of 9 rules evaluated</strong>" },
+          { icon: HERO_ICONS.check, text: "Rule #1 (Consent & Opt-in): <strong>PASSED — WhatsApp opt-in active</strong>" },
+          { icon: HERO_ICONS.check, text: "Rule #2 (Discount Cap): <strong>PASSED — 5% &le; 10% policy threshold</strong>" },
+          { icon: HERO_ICONS.check, text: "Rule #3 (Contact Frequency): <strong>PASSED — 0 messages in last 48h</strong>" },
+          { icon: HERO_ICONS.check, text: "Rule #4 (DND Curfew): <strong>PASSED — 09:58 AM within 09:00–21:00</strong>" }
+        ],
+        calloutTitle: "What happened?",
+        calloutDesc: "Deterministic 9-rule compliance engine verified all constraints. All frequency caps, opt-ins, and discount thresholds passed without veto."
       },
       {
-        stage: "ACT",
-        title: "Dispatched personalized WhatsApp interactive template with direct 1-tap checkout link",
-        timeOffset: "09:58:13 AM",
-        badgeCls: "hero-step-badge-teal",
-        badgeText: "5. ACT",
-        detail: {
-          channel: "WHATSAPP_BUSINESS_API",
-          template: "tpl_cart_free_ship_v2",
-          cost: "₹0.85",
-          delivery_status: "DELIVERED"
-        }
+        num: 5,
+        name: "ACT",
+        headerTitle: "5. ACT",
+        headerIcon: HERO_ICONS.act,
+        rows: [
+          { icon: HERO_ICONS.clock, text: "09:58:13 AM" },
+          { icon: HERO_ICONS.send, text: "dispatched action: <strong>send_whatsapp_template</strong>" },
+          { icon: HERO_ICONS.message, text: "channel: <strong>Meta WhatsApp Cloud API</strong>" },
+          { icon: HERO_ICONS.hash, text: "message ID: <strong>wamid.HBgLOTE2M...829A</strong>" },
+          { icon: HERO_ICONS.check, text: "delivery status: <strong>DELIVERED</strong>" },
+          { icon: HERO_ICONS.card, text: "API cost: <strong>₹0.85</strong>" }
+        ],
+        calloutTitle: "What happened?",
+        calloutDesc: "Interactive WhatsApp recovery notification dispatched with 1-tap checkout resume link and pre-applied free shipping code."
       },
       {
-        stage: "OBSERVE_OUTCOME",
-        title: "Customer clicked recovery link — checkout resumed in progress",
-        timeOffset: "09:58:25 AM",
-        badgeCls: "hero-step-badge-blue",
-        badgeText: "6. OBSERVE OUTCOME",
-        detail: {
-          click_event: "link_opened",
-          browser_active: true,
-          current_state: "RECOVERING (Awaiting payment authorization)"
-        }
+        num: 6,
+        name: "OBSERVE OUTCOME",
+        headerTitle: "6. OBSERVE OUTCOME",
+        headerIcon: HERO_ICONS.outcome,
+        rows: [
+          { icon: HERO_ICONS.clock, text: "09:58:25 AM" },
+          { icon: HERO_ICONS.mouse, text: "interaction event: <strong>recovery_link_clicked</strong>" },
+          { icon: HERO_ICONS.check, text: "payment status: <strong>PAYMENT_COMPLETED</strong>" },
+          { icon: HERO_ICONS.dollar, text: "recovered revenue: <strong>₹2,300</strong>" },
+          { icon: HERO_ICONS.trend, text: "net ROI: <strong>₹2,299.15 (2,700x ROI)</strong>" },
+          { icon: HERO_ICONS.flag, text: "terminal state: <strong>RESOLVED_RECOVERED</strong>" }
+        ],
+        calloutTitle: "What happened?",
+        calloutDesc: "Customer clicked link within 12 seconds and authorized payment via UPI. ₹2,300 recovered with net ROI of 2,700x relative to dispatch cost."
+      }
+    ]
+  },
+  {
+    id: "CASE-1042",
+    type: "UPI_PAYMENT_FAIL",
+    typeLabel: "Payment Failure",
+    amount: 3499,
+    customer: "CUST_051 (High LTV)",
+    status: "RESOLVED",
+    statusLabel: "Recovered",
+    statusCls: "badge-teal",
+    steps: [
+      {
+        num: 1,
+        name: "OBSERVE",
+        headerTitle: "1. OBSERVE",
+        headerIcon: HERO_ICONS.eye,
+        rows: [
+          { icon: HERO_ICONS.clock, text: "10:31:02 AM" },
+          { icon: HERO_ICONS.calendar, text: "event type: <strong>UPI_PAYMENT_FAIL</strong>" },
+          { icon: HERO_ICONS.card, text: "gateway: <strong>Razorpay / NPCI</strong>" },
+          { icon: HERO_ICONS.alert, text: "decline code: <strong>NETWORK_TIMEOUT</strong>" },
+          { icon: HERO_ICONS.dollar, text: "customer LTV: <strong>₹48,200</strong>" },
+          { icon: HERO_ICONS.user, text: "customer: <strong>CUST_051 (High LTV)</strong>" }
+        ],
+        calloutTitle: "What happened?",
+        calloutDesc: "Involuntary decline received on NPCI switch due to transient bank timeout. Buyer intent remains completely intact."
+      },
+      {
+        num: 2,
+        name: "REASON",
+        headerTitle: "2. REASON",
+        headerIcon: HERO_ICONS.brain,
+        rows: [
+          { icon: HERO_ICONS.clock, text: "10:31:03 AM" },
+          { icon: HERO_ICONS.trend, text: "hypothesis: <strong>Transient switch latency, zero intent degradation</strong>" },
+          { icon: HERO_ICONS.message, text: "eligible channels: <strong>WHATSAPP, SMS, SILENT_RETRY</strong>" },
+          { icon: HERO_ICONS.tool, text: "policy cap: <strong>Max 3 retry attempts within 4 hours</strong>" },
+          { icon: HERO_ICONS.gift, text: "target action: <strong>schedule_payment_retry (T+15m)</strong>" }
+        ],
+        calloutTitle: "What happened?",
+        calloutDesc: "High LTV buyer with pristine payment history. Agent evaluates silent backup route retry to avoid customer friction."
+      },
+      {
+        num: 3,
+        name: "PLAN",
+        headerTitle: "3. PLAN",
+        headerIcon: HERO_ICONS.plan,
+        rows: [
+          { icon: HERO_ICONS.clock, text: "10:31:04 AM" },
+          { icon: HERO_ICONS.tool, text: "proposed tool: <strong>schedule_payment_retry</strong>" },
+          { icon: HERO_ICONS.phone, text: "channel: <strong>AUTO_BANKING_SWITCH</strong>" },
+          { icon: HERO_ICONS.timer, text: "backoff minutes: <strong>15 mins</strong>" },
+          { icon: HERO_ICONS.percent, text: "discount enum: <strong>NONE</strong>" }
+        ],
+        calloutTitle: "What happened?",
+        calloutDesc: "Agent proposes automated switch retry with exponential backoff, adhering strictly to bounded tool declarations."
+      },
+      {
+        num: 4,
+        name: "GUARDRAIL CHECK",
+        headerTitle: "4. GUARDRAIL CHECK",
+        headerIcon: HERO_ICONS.guardrail,
+        rows: [
+          { icon: HERO_ICONS.clock, text: "10:31:04 AM" },
+          { icon: HERO_ICONS.shield, text: "guardrail evaluation: <strong>9 of 9 rules evaluated</strong>" },
+          { icon: HERO_ICONS.check, text: "Rule #4 (DND Curfew): <strong>PASSED — 10:31 AM daytime</strong>" },
+          { icon: HERO_ICONS.check, text: "Rule #5 (Rate Limiter): <strong>PASSED — Attempt 1 of 3</strong>" },
+          { icon: HERO_ICONS.check, text: "Rule #8 (Idempotency): <strong>PASSED — Key verified</strong>" }
+        ],
+        calloutTitle: "What happened?",
+        calloutDesc: "Deterministic compliance engine confirms idempotency key uniqueness and rate limits before executing bank call."
+      },
+      {
+        num: 5,
+        name: "ACT",
+        headerTitle: "5. ACT",
+        headerIcon: HERO_ICONS.act,
+        rows: [
+          { icon: HERO_ICONS.clock, text: "10:31:06 AM" },
+          { icon: HERO_ICONS.send, text: "dispatched action: <strong>schedule_payment_retry</strong>" },
+          { icon: HERO_ICONS.card, text: "route: <strong>HDFC_DIRECT_SWITCH</strong>" },
+          { icon: HERO_ICONS.hash, text: "idempotency key: <strong>rec_retry_1042_c8f3</strong>" },
+          { icon: HERO_ICONS.check, text: "status: <strong>HTTP 202 ACCEPTED</strong>" }
+        ],
+        calloutTitle: "What happened?",
+        calloutDesc: "Dispatched silent idempotency-keyed payment retry to backup payment route without disturbing the customer."
+      },
+      {
+        num: 6,
+        name: "OBSERVE OUTCOME",
+        headerTitle: "6. OBSERVE OUTCOME",
+        headerIcon: HERO_ICONS.outcome,
+        rows: [
+          { icon: HERO_ICONS.clock, text: "10:31:12 AM" },
+          { icon: HERO_ICONS.calendar, text: "gateway event: <strong>payment.captured</strong>" },
+          { icon: HERO_ICONS.dollar, text: "recovered amount: <strong>₹3,499</strong>" },
+          { icon: HERO_ICONS.card, text: "net cost: <strong>₹0.00 (Silent API)</strong>" },
+          { icon: HERO_ICONS.flag, text: "terminal state: <strong>RESOLVED_CAPTURED</strong>" }
+        ],
+        calloutTitle: "What happened?",
+        calloutDesc: "Webhook confirmed payment captured automatically on backup switch. ₹3,499 recovered with zero customer intervention."
       }
     ]
   },
@@ -332,199 +388,113 @@ const HERO_SCENARIOS = [
     status: "ESCALATED",
     statusLabel: "Escalated",
     statusCls: "badge-rose",
-    stages: [
+    steps: [
       {
-        stage: "OBSERVE",
-        title: "Net-30 Enterprise invoice overdue by 14 days without PTP record",
-        timeOffset: "10:35:01 AM",
-        badgeCls: "hero-step-badge-purple",
-        badgeText: "1. OBSERVE",
-        detail: {
-          invoice_id: "INV-9021",
-          client: "ACME Corp",
-          due_date: "14 days overdue",
-          amount: "₹85,000",
-          prior_notices: 2
-        }
+        num: 1,
+        name: "OBSERVE",
+        headerTitle: "1. OBSERVE",
+        headerIcon: HERO_ICONS.eye,
+        rows: [
+          { icon: HERO_ICONS.clock, text: "10:35:01 AM" },
+          { icon: HERO_ICONS.file, text: "invoice ID: <strong>INV-9021</strong>" },
+          { icon: HERO_ICONS.user, text: "client: <strong>ACME Corp (Enterprise Tier)</strong>" },
+          { icon: HERO_ICONS.calendar, text: "due date: <strong>14 days overdue</strong>" },
+          { icon: HERO_ICONS.dollar, text: "amount: <strong>₹85,000</strong>" }
+        ],
+        calloutTitle: "What happened?",
+        calloutDesc: "Enterprise Net-30 invoice overdue by 14 days without an active Promise-to-Pay on file."
       },
       {
-        stage: "REASON",
-        title: "Analyzing account manager notes and accounts payable communication history",
-        timeOffset: "10:35:02 AM",
-        badgeCls: "hero-step-badge-blue",
-        badgeText: "2. REASON",
-        detail: {
-          account_tier: "ENTERPRISE",
-          dispute_flag: "PO_RECONCILIATION_MISMATCH",
-          automated_dunning_limit: "EXCEEDED (Max 2 reminders reached)"
-        }
+        num: 2,
+        name: "REASON",
+        headerTitle: "2. REASON",
+        headerIcon: HERO_ICONS.brain,
+        rows: [
+          { icon: HERO_ICONS.clock, text: "10:35:02 AM" },
+          { icon: HERO_ICONS.trend, text: "account risk: <strong>PO Mismatch suspected</strong>" },
+          { icon: HERO_ICONS.user, text: "account relationship: <strong>Strategic Key Account ($120k ARR)</strong>" },
+          { icon: HERO_ICONS.tool, text: "recommendation: <strong>Human escalation required (>₹50,000)</strong>" }
+        ],
+        calloutTitle: "What happened?",
+        calloutDesc: "Invoice exceeds automated threshold. Account relationship requires sensitive human desk intervention."
       },
       {
-        stage: "PLAN",
-        title: "Proposing direct dunning call via outbound AI Voice Agent",
-        timeOffset: "10:35:03 AM",
-        badgeCls: "hero-step-badge-purple",
-        badgeText: "3. PLAN",
-        detail: {
-          proposed_tool: "trigger_outbound_voice_call",
-          channel: "VOICE_SYNTHESIS",
-          target: "CFO Direct Line"
-        }
+        num: 3,
+        name: "PLAN",
+        headerTitle: "3. PLAN",
+        headerIcon: HERO_ICONS.plan,
+        rows: [
+          { icon: HERO_ICONS.clock, text: "10:35:03 AM" },
+          { icon: HERO_ICONS.tool, text: "proposed tool: <strong>escalate_to_human</strong>" },
+          { icon: HERO_ICONS.user, text: "assignee: <strong>Enterprise AE Desk (Priya Sharma)</strong>" },
+          { icon: HERO_ICONS.file, text: "brief: <strong>PO reconciliation dossier generated</strong>" }
+        ],
+        calloutTitle: "What happened?",
+        calloutDesc: "Agent proposes escalation to designated Enterprise AE rather than automated spam outreach."
       },
       {
-        stage: "GUARDRAIL_CHECK",
-        title: "Guardrail Engine VETO: Rule #7 Enterprise Human-in-the-Loop Threshold (>₹50,000)",
-        timeOffset: "10:35:03 AM",
-        badgeCls: "hero-step-badge-amber",
-        badgeText: "4. GUARDRAIL VETO",
-        detail: {
-          violated_rule: "RULE_7_ENTERPRISE_HITL_THRESHOLD",
-          reason: "Automated robocalls/harassment strictly forbidden for enterprise accounts over ₹50,000",
-          guardrail_action: "FAIL-CLOSED: Action blocked immediately."
-        }
+        num: 4,
+        name: "GUARDRAIL CHECK",
+        headerTitle: "4. GUARDRAIL CHECK",
+        headerIcon: HERO_ICONS.guardrail,
+        rows: [
+          { icon: HERO_ICONS.clock, text: "10:35:03 AM" },
+          { icon: HERO_ICONS.shield, text: "guardrail evaluation: <strong>9 of 9 rules evaluated</strong>" },
+          { icon: HERO_ICONS.check, text: "Rule #7 (Enterprise Threshold): <strong>ENFORCED — Human-in-the-Loop</strong>" },
+          { icon: HERO_ICONS.check, text: "Rule #9 (Escalation Routing): <strong>PASSED — Assigned to Priya Sharma</strong>" }
+        ],
+        calloutTitle: "What happened?",
+        calloutDesc: "Deterministic Rule #7 strictly forbids automated outreach above ₹50,000. Human desk routing verified."
       },
       {
-        stage: "PLAN",
-        title: "Gemini Adaptive Re-plan: Proposing escalation to designated Enterprise Account Executive",
-        timeOffset: "10:35:04 AM",
-        badgeCls: "hero-step-badge-blue",
-        badgeText: "4b. ADAPTIVE RE-PLAN",
-        detail: {
-          tool: "escalate_to_human",
-          assignee: "Enterprise AE Desk (Priya Sharma)",
-          brief: "PO mismatch flagged on INV-9021. Requires manual credit memo reconciliation.",
-          guardrail_recheck: "PASSED (Safe human escalation)"
-        }
+        num: 5,
+        name: "ACT",
+        headerTitle: "5. ACT",
+        headerIcon: HERO_ICONS.act,
+        rows: [
+          { icon: HERO_ICONS.clock, text: "10:35:05 AM" },
+          { icon: HERO_ICONS.send, text: "action: <strong>create_crm_escalation_ticket</strong>" },
+          { icon: HERO_ICONS.hash, text: "ticket ID: <strong>TICK-8841 (Priority: High)</strong>" },
+          { icon: HERO_ICONS.timer, text: "SLA: <strong>60 minutes</strong>" }
+        ],
+        calloutTitle: "What happened?",
+        calloutDesc: "Created priority ticket in CRM with full context brief & reconciliation dossier for Account Executive."
       },
       {
-        stage: "ACT",
-        title: "Created priority ticket in CRM with full context brief & reconciliation dossier",
-        timeOffset: "10:35:05 AM",
-        badgeCls: "hero-step-badge-teal",
-        badgeText: "5. ACT",
-        detail: {
-          ticket_id: "TICK-8841",
-          desk: "Accounts Receivable Human Ops",
-          sla_minutes: 60,
-          customer_notification: "SUPPRESSED (Human handled)"
-        }
-      },
-      {
-        stage: "OBSERVE_OUTCOME",
-        title: "Escalation acknowledged by AE — Promise-to-Pay scheduled for next billing cycle",
-        timeOffset: "10:35:15 AM",
-        badgeCls: "hero-step-badge-rose",
-        badgeText: "6. OBSERVE OUTCOME",
-        detail: {
-          status: "ESCALATED_MANAGED",
-          risk_mitigated: "Relationship protected, zero brand churn risk",
-          resolution_eta: "Within 48h"
-        }
-      }
-    ]
-  },
-  {
-    id: "CASE-1049",
-    type: "UPI_PAYMENT_FAIL",
-    typeLabel: "Payment Failure",
-    amount: 14999,
-    customer: "CUST_9918 (Flagged IP)",
-    status: "TERMINATED",
-    statusLabel: "Quarantined",
-    statusCls: "badge-amber",
-    stages: [
-      {
-        stage: "OBSERVE",
-        title: "High-value checkout attempt from anonymized proxy subnet with card velocity spike",
-        timeOffset: "11:02:14 AM",
-        badgeCls: "hero-step-badge-purple",
-        badgeText: "1. OBSERVE",
-        detail: {
-          amount: "₹14,999",
-          fraud_score: "0.94 (Critical Risk)",
-          card_bin_country: "NG",
-          shipping_country: "IN",
-          velocity: "6 attempts in 90 seconds"
-        }
-      },
-      {
-        stage: "REASON",
-        title: "High fraud probability — risk engine flags credential stuffing vector",
-        timeOffset: "11:02:15 AM",
-        badgeCls: "hero-step-badge-blue",
-        badgeText: "2. REASON",
-        detail: {
-          risk_band: "CRITICAL_FRAUD",
-          recommendation: "Immediate quarantine. Suppress all retry & discount mechanisms."
-        }
-      },
-      {
-        stage: "PLAN",
-        title: "Proposing standard card decline SMS with update payment link",
-        timeOffset: "11:02:15 AM",
-        badgeCls: "hero-step-badge-purple",
-        badgeText: "3. PLAN",
-        detail: {
-          proposed_tool: "send_recovery_message",
-          channel: "SMS",
-          template: "GENERIC_CARD_FAIL_SMS"
-        }
-      },
-      {
-        stage: "GUARDRAIL_CHECK",
-        title: "Guardrail Engine VETO: Rule #1 Zero-Tolerance Fraud Quarantine (Score 0.94 > 0.80)",
-        timeOffset: "11:02:16 AM",
-        badgeCls: "hero-step-badge-amber",
-        badgeText: "4. GUARDRAIL VETO",
-        detail: {
-          violated_rule: "RULE_1_FRAUD_SCORE_QUARANTINE",
-          threshold: "0.80",
-          actual: "0.94",
-          fail_closed_action: "BLOCK ALL OUTBOUND CONTACT & PAYMENT RETRIES PERMANENTLY"
-        }
-      },
-      {
-        stage: "ACT",
-        title: "Case instantly quarantined — blacklisted IP session and notified Security Desk",
-        timeOffset: "11:02:17 AM",
-        badgeCls: "hero-step-badge-teal",
-        badgeText: "5. ACT",
-        detail: {
-          action: "quarantine_and_blacklist",
-          chargeback_prevention_value: "₹14,999",
-          zero_outbound_sent: true
-        }
-      },
-      {
-        stage: "OBSERVE_OUTCOME",
-        title: "Terminal quarantine confirmed — zero revenue loss or chargeback penalty",
-        timeOffset: "11:02:18 AM",
-        badgeCls: "hero-step-badge-amber",
-        badgeText: "6. OBSERVE OUTCOME",
-        detail: {
-          state: "TERMINATED_FRAUD_QUARANTINE",
-          security_incident_id: "SEC-4192",
-          compliance: "100% fail-closed"
-        }
+        num: 6,
+        name: "OBSERVE OUTCOME",
+        headerTitle: "6. OBSERVE OUTCOME",
+        headerIcon: HERO_ICONS.outcome,
+        rows: [
+          { icon: HERO_ICONS.clock, text: "10:35:15 AM" },
+          { icon: HERO_ICONS.check, text: "escalation state: <strong>ACKNOWLEDGED_BY_AE</strong>" },
+          { icon: HERO_ICONS.trend, text: "risk mitigated: <strong>Relationship protected, 0 brand churn</strong>" },
+          { icon: HERO_ICONS.flag, text: "terminal state: <strong>ESCALATED_MANAGED</strong>" }
+        ],
+        calloutTitle: "What happened?",
+        calloutDesc: "Account Executive acknowledged ticket. Client confirmed corrected PO number and scheduled PTP."
       }
     ]
   }
 ];
 
 let heroCurrentScenarioIdx = 0;
-let heroPlaybackTimer = null;
+let heroCurrentStepIdx = 0;
 let heroAutoCycleTimer = null;
 
 function initAgentHero() {
   const replayBtn = document.getElementById("btn-hero-replay");
   const inspectBtn = document.getElementById("btn-hero-inspect");
-  const scenarioChips = document.querySelectorAll("#hero-scenarios-bar .scenario-chip");
   const autoToggle = document.getElementById("hero-toggle-autocycle");
+  const newRecoveryBtn = document.getElementById("btn-new-recovery");
+  const viewReportsBtn = document.getElementById("btn-view-reports");
+  const loginBtn = document.getElementById("btn-topbar-login");
 
   // Replay another case button
   replayBtn?.addEventListener("click", () => {
     heroCurrentScenarioIdx = (heroCurrentScenarioIdx + 1) % HERO_SCENARIOS.length;
-    playHeroScenario(heroCurrentScenarioIdx, true);
+    heroCurrentStepIdx = 0;
+    renderHeroScenario(heroCurrentScenarioIdx, 0);
     resetAutoCycle();
   });
 
@@ -534,12 +504,29 @@ function initAgentHero() {
     if (sc) openCaseDrawer(sc.id);
   });
 
-  // Scenario chips
-  scenarioChips.forEach((chip, idx) => {
-    chip.addEventListener("click", () => {
-      heroCurrentScenarioIdx = idx;
-      playHeroScenario(idx, true);
-      resetAutoCycle();
+  // Action buttons
+  newRecoveryBtn?.addEventListener("click", () => {
+    switchTab("simulator");
+  });
+
+  viewReportsBtn?.addEventListener("click", () => {
+    switchTab("reports");
+  });
+
+  loginBtn?.addEventListener("click", () => {
+    showToast("You are currently logged in as Courtney Henry (Admin)");
+  });
+
+  // Stepper node click listeners
+  const stepNodes = document.querySelectorAll(".hero-step-node");
+  stepNodes.forEach((node) => {
+    node.addEventListener("click", () => {
+      const stepIdx = parseInt(node.getAttribute("data-step"), 10);
+      if (!isNaN(stepIdx)) {
+        heroCurrentStepIdx = stepIdx;
+        renderActiveStep(heroCurrentScenarioIdx, heroCurrentStepIdx);
+        resetAutoCycle();
+      }
     });
   });
 
@@ -552,77 +539,14 @@ function initAgentHero() {
     }
   });
 
-  // Initial playback
-  playHeroScenario(0, true);
+  // Initial render matching image.png (Scenario 0, Step 0 = OBSERVE)
+  renderHeroScenario(0, 0);
   startAutoCycle();
 }
 
-function startAutoCycle() {
-  stopAutoCycle();
-  heroAutoCycleTimer = setInterval(() => {
-    const autoToggle = document.getElementById("hero-toggle-autocycle");
-    if (activeTab === "overview" && autoToggle && autoToggle.checked) {
-      heroCurrentScenarioIdx = (heroCurrentScenarioIdx + 1) % HERO_SCENARIOS.length;
-      playHeroScenario(heroCurrentScenarioIdx, true);
-    }
-  }, 9000);
-}
-
-function stopAutoCycle() {
-  if (heroAutoCycleTimer) {
-    clearInterval(heroAutoCycleTimer);
-    heroAutoCycleTimer = null;
-  }
-}
-
-function resetAutoCycle() {
-  const autoToggle = document.getElementById("hero-toggle-autocycle");
-  if (autoToggle && autoToggle.checked) {
-    startAutoCycle();
-  }
-}
-
-function updateRibbonNode(stageName, isDone, isActive) {
-  const stageMap = {
-    OBSERVE: "stage-node-observe",
-    REASON: "stage-node-reason",
-    PLAN: "stage-node-plan",
-    GUARDRAIL_CHECK: "stage-node-guardrail",
-    ACT: "stage-node-act",
-    OBSERVE_OUTCOME: "stage-node-outcome"
-  };
-
-  const nodeId = stageMap[stageName];
-  if (!nodeId) return;
-  const el = document.getElementById(nodeId);
-  if (!el) return;
-
-  el.classList.toggle("done", isDone);
-  el.classList.toggle("active", isActive);
-}
-
-function resetRibbon() {
-  const ids = ["stage-node-observe", "stage-node-reason", "stage-node-plan", "stage-node-guardrail", "stage-node-act", "stage-node-outcome"];
-  ids.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.classList.remove("active", "done");
-    }
-  });
-}
-
-function playHeroScenario(scenarioIndex, animated = true) {
-  if (heroPlaybackTimer) {
-    clearInterval(heroPlaybackTimer);
-    heroPlaybackTimer = null;
-  }
-
+function renderHeroScenario(scenarioIndex, stepIndex = 0) {
   const sc = HERO_SCENARIOS[scenarioIndex];
   if (!sc) return;
-
-  // Update scenario chips UI
-  const chips = document.querySelectorAll("#hero-scenarios-bar .scenario-chip");
-  chips.forEach((c, i) => c.classList.toggle("active", i === scenarioIndex));
 
   // Update metadata bar
   const metaCaseId = document.getElementById("hero-meta-case-id");
@@ -640,78 +564,94 @@ function playHeroScenario(scenarioIndex, animated = true) {
     metaStatus.innerText = `State: ${sc.status}`;
   }
 
-  const feed = document.getElementById("hero-feed-stream");
-  if (!feed) return;
-  feed.innerHTML = "";
-  resetRibbon();
-
-  if (!animated) {
-    // Render all immediately
-    sc.stages.forEach(st => {
-      appendHeroStep(feed, st);
-    });
-    // Set all nodes to done
-    ["OBSERVE", "REASON", "PLAN", "GUARDRAIL_CHECK", "ACT", "OBSERVE_OUTCOME"].forEach(s => updateRibbonNode(s, true, false));
-    return;
-  }
-
-  let stepIdx = 0;
-  const totalSteps = sc.stages.length;
-
-  // Step 0 immediately
-  const firstStep = sc.stages[0];
-  appendHeroStep(feed, firstStep);
-  updateRibbonNode(firstStep.stage, false, true);
-  stepIdx++;
-
-  heroPlaybackTimer = setInterval(() => {
-    if (stepIdx >= totalSteps) {
-      clearInterval(heroPlaybackTimer);
-      heroPlaybackTimer = null;
-      // Mark last ribbon item active / done
-      return;
-    }
-
-    const currentStep = sc.stages[stepIdx];
-    const prevStep = sc.stages[stepIdx - 1];
-
-    if (prevStep) {
-      updateRibbonNode(prevStep.stage, true, false);
-    }
-    updateRibbonNode(currentStep.stage, false, true);
-
-    appendHeroStep(feed, currentStep);
-    stepIdx++;
-  }, 950);
+  heroCurrentStepIdx = stepIndex;
+  renderActiveStep(scenarioIndex, stepIndex);
 }
 
-function appendHeroStep(feed, step) {
-  const row = document.createElement("div");
-  row.className = "hero-step-row";
+function renderActiveStep(scenarioIndex, stepIndex) {
+  const sc = HERO_SCENARIOS[scenarioIndex];
+  if (!sc || !sc.steps || !sc.steps[stepIndex]) return;
 
-  // Build detail key-value pills
-  let detailHtml = "";
-  if (step.detail && typeof step.detail === "object") {
-    const items = Object.entries(step.detail).map(([k, v]) => {
-      const label = k.replace(/_/g, " ");
-      return `<div class="hero-detail-item"><span class="hero-detail-key">${label}:</span> <span class="hero-detail-val">${v}</span></div>`;
-    }).join("");
-    detailHtml = `<div class="hero-step-details">${items}</div>`;
-  }
+  const step = sc.steps[stepIndex];
 
-  row.innerHTML = `
-    <div class="hero-step-header">
-      <div class="hero-step-title-group">
-        <span class="hero-step-badge ${step.badgeCls || 'hero-step-badge-purple'}">${step.badgeText}</span>
-        <span class="hero-step-title">${step.title}</span>
-      </div>
-      <span class="hero-step-time">${step.timeOffset}</span>
+  // Update Stepper Ribbon
+  const stepNodes = document.querySelectorAll(".hero-step-node");
+  stepNodes.forEach((node, idx) => {
+    if (idx === stepIndex) {
+      node.classList.add("active");
+      node.classList.remove("completed");
+    } else if (idx < stepIndex) {
+      node.classList.remove("active");
+      node.classList.add("completed");
+    } else {
+      node.classList.remove("active");
+      node.classList.remove("completed");
+    }
+  });
+
+  // Render into #hero-active-step-card matching image.png
+  const cardContainer = document.getElementById("hero-active-step-card");
+  if (!cardContainer) return;
+
+  const rowsHtml = step.rows.map(r => `
+    <div class="step-detail-row">
+      ${r.icon}
+      <span class="step-row-text">${r.text}</span>
     </div>
-    ${detailHtml}
-  `;
+  `).join("");
 
-  feed.appendChild(row);
-  feed.scrollTop = feed.scrollHeight;
+  cardContainer.innerHTML = `
+    <div class="active-step-header">
+      ${step.headerIcon}
+      <span class="active-step-title">${step.headerTitle}</span>
+    </div>
+    <div class="active-step-body">
+      <div class="step-detail-left">
+        ${rowsHtml}
+      </div>
+      <div class="step-detail-right">
+        <div class="step-callout-card">
+          <div class="step-callout-title">${step.calloutTitle}</div>
+          <div class="step-callout-desc">${step.calloutDesc}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function startAutoCycle() {
+  stopAutoCycle();
+  heroAutoCycleTimer = setInterval(() => {
+    const autoToggle = document.getElementById("hero-toggle-autocycle");
+    if (activeTab === "overview" && autoToggle && autoToggle.checked) {
+      const sc = HERO_SCENARIOS[heroCurrentScenarioIdx];
+      if (!sc || !sc.steps) return;
+
+      // Advance to next step, or if at last step, advance to next scenario
+      if (heroCurrentStepIdx < sc.steps.length - 1) {
+        heroCurrentStepIdx++;
+        renderActiveStep(heroCurrentScenarioIdx, heroCurrentStepIdx);
+      } else {
+        heroCurrentScenarioIdx = (heroCurrentScenarioIdx + 1) % HERO_SCENARIOS.length;
+        heroCurrentStepIdx = 0;
+        renderHeroScenario(heroCurrentScenarioIdx, 0);
+      }
+    }
+  }, 4000);
+}
+
+function stopAutoCycle() {
+  if (heroAutoCycleTimer) {
+    clearInterval(heroAutoCycleTimer);
+    heroAutoCycleTimer = null;
+  }
+}
+
+function resetAutoCycle() {
+  const autoToggle = document.getElementById("hero-toggle-autocycle");
+  if (autoToggle && autoToggle.checked) {
+    startAutoCycle();
+  }
 }
 
 // ---------------------------------------------------------------------------
