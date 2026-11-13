@@ -653,32 +653,14 @@ function resetAutoCycle() {
 // ---------------------------------------------------------------------------
 // Overview Metrics
 // ---------------------------------------------------------------------------
+// Snapshot generated from checked-in batch_report.json. Session /metrics is separate.
 async function fetchOverviewMetrics() {
-  try {
-    const res = await fetch("/metrics");
-    if (!res.ok) return;
-    const data = await res.json();
-
-    if (data.net_recovered_amount !== undefined) {
-      // Net recovered in Lakhs or formatted
-      const netLakhs = (data.net_recovered_amount / 100000).toFixed(1);
-      const grossLakhs = (data.gross_recovered_amount / 100000).toFixed(1);
-      
-      const valRecovered = document.getElementById("val-recovered-revenue");
-      if (valRecovered) valRecovered.innerText = `₹${netLakhs}L`;
-
-      const valRate = document.getElementById("val-recovery-rate");
-      if (valRate) valRate.innerText = `${(data.treatment_resolution_rate * 100).toFixed(1)}%`;
-
-      const valCases = document.getElementById("val-active-cases");
-      if (valCases) valCases.innerText = `${data.treatment_cases_count || 223}`;
-
-      const donutCenter = document.getElementById("donut-center-revenue");
-      if (donutCenter) donutCenter.innerText = `₹${netLakhs}L`;
-    }
-  } catch (err) {
-    console.error("Failed to load metrics:", err);
-  }
+  const data = {"total_events_processed": 223, "treatment_cases_count": 178, "control_cases_count": 45, "treatment_resolution_rate": 0.2022, "control_resolution_rate": 0.3111, "incremental_lift_percentage_points": -10.89, "gross_recovered_amount": 91151.0, "total_cost_incurred": 58.7, "net_recovered_amount": 91092.3, "roi_multiple": 1551.8, "compliance_violations_count": 0, "escalation_rate": 0.0, "termination_rate": 0.6348};
+  const set = (id, value) => { const el = document.getElementById(id); if (el) el.innerText = value; };
+  set('val-recovered-revenue', `₹${data.net_recovered_amount.toLocaleString('en-IN', {minimumFractionDigits: 2})}`);
+  set('val-recovery-rate', `${(data.treatment_resolution_rate * 100).toFixed(2)}%`);
+  set('val-active-cases', `${data.total_events_processed}`);
+  set('donut-center-revenue', 'Example');
 }
 
 // ---------------------------------------------------------------------------
@@ -863,8 +845,8 @@ function renderPlaybookDonutChart() {
       ${circles}
     </svg>
     <div class="donut-center-label">
-      <div class="donut-center-val" id="donut-center-revenue">₹3.8L</div>
-      <div class="donut-center-sub">Recovered</div>
+      <div class="donut-center-val" id="donut-center-revenue">Example</div>
+      <div class="donut-center-sub">Illustrative mix</div>
     </div>
   `;
 
@@ -1362,4 +1344,4 @@ async function openCaseDrawer(caseId) {
 function closeDrawer() {
   document.getElementById("case-timeline-drawer")?.classList.remove("open");
   document.getElementById("drawer-backdrop")?.classList.remove("open");
-}
+                                    }
