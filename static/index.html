@@ -365,15 +365,15 @@
           <div class="demoted-section" id="section-batch-impact">
             <div class="demoted-header">
               <div>
-                <span class="demoted-title">Batch Impact &amp; Historical Economics</span>
-                <div class="demoted-subtitle">Aggregate metrics derived from offline historical replay across 223 cases against 20% simulated holdout baseline</div>
+                <span class="demoted-title">Saved Offline Replay Snapshot</span>
+                <div class="demoted-subtitle">Source: checked-in batch_report.json (Python replay), 223 fixture events. Treatment 20.22% vs simulated control 31.11%: -10.89 pp. Not live revenue or causal lift. Interactive session metrics are separate.</div>
               </div>
               <span class="badge badge-purple" style="font-size: 11px;">Simulated Holdout Baseline</span>
             </div>
 
             <!-- 4 Demoted KPI Cards -->
             <div class="kpi-grid demoted">
-              <!-- Card 1: Revenue at Risk -->
+              <!-- Card 1: Total Replay Events -->
               <div class="kpi-card demoted" id="kpi-card-risk">
                 <div class="kpi-top">
                   <div class="kpi-icon-circle kpi-icon-purple">
@@ -382,16 +382,16 @@
                       <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                     </svg>
                   </div>
-                  <span class="kpi-label">Revenue at Risk</span>
+                  <span class="kpi-label">Total Replay Events</span>
                 </div>
-                <div class="kpi-value" id="val-revenue-risk">₹12.4L</div>
+                <div class="kpi-value" id="val-revenue-risk">223</div>
                 <div class="kpi-trend">
-                  <span class="trend-positive">+12.5%</span>
-                  <span class="trend-context">vs holdout</span>
+                  <span class="trend-positive">178 / 45</span>
+                  <span class="trend-context">treatment / control</span>
                 </div>
               </div>
 
-              <!-- Card 2: Recovered Revenue -->
+              <!-- Card 2: Modeled Net Recovery -->
               <div class="kpi-card demoted" id="kpi-card-recovered">
                 <div class="kpi-top">
                   <div class="kpi-icon-circle kpi-icon-teal">
@@ -400,12 +400,12 @@
                       <polyline points="17 6 23 6 23 12"></polyline>
                     </svg>
                   </div>
-                  <span class="kpi-label">Recovered Revenue</span>
+                  <span class="kpi-label">Modeled Net Recovery</span>
                 </div>
-                <div class="kpi-value" id="val-recovered-revenue">₹3.8L</div>
+                <div class="kpi-value" id="val-recovered-revenue">₹91,092</div>
                 <div class="kpi-trend">
-                  <span class="trend-positive">+8.3%</span>
-                  <span class="trend-context">vs baseline</span>
+                  <span class="trend-positive">₹58.70</span>
+                  <span class="trend-context">modeled channel costs</span>
                 </div>
               </div>
 
@@ -420,10 +420,10 @@
                   </div>
                   <span class="kpi-label">Recovery Rate</span>
                 </div>
-                <div class="kpi-value" id="val-recovery-rate">30.6%</div>
+                <div class="kpi-value" id="val-recovery-rate">20.22%</div>
                 <div class="kpi-trend">
-                  <span class="trend-positive">+4.2 pp</span>
-                  <span class="trend-context">net lift</span>
+                  <span class="trend-negative">-10.89 pp</span>
+                  <span class="trend-context">vs simulated control</span>
                 </div>
               </div>
 
@@ -442,7 +442,7 @@
                 </div>
                 <div class="kpi-value" id="val-active-cases">223</div>
                 <div class="kpi-trend">
-                  <span class="trend-positive">+15</span>
+                  <span>saved</span>
                   <span class="trend-context">offline sample</span>
                 </div>
               </div>
@@ -450,11 +450,11 @@
 
             <!-- Charts Grid (Line Chart + Donut Chart) -->
             <div class="charts-grid">
-              <!-- Left Chart: Recovery Overview (Line Chart) -->
+              <!-- Left Chart: Illustrative Recovery Trend (Line Chart) -->
               <div class="card" id="card-recovery-overview-chart">
                 <div class="card-header">
                   <div>
-                    <div class="card-title">Recovery Lift (Treatment vs Baseline)</div>
+                    <div class="card-title">Illustrative Trend (Not Evaluation Data)</div>
                   </div>
                   <div class="card-header-controls">
                     <div class="chart-legend-inline">
@@ -481,18 +481,18 @@
                 </div>
               </div>
 
-              <!-- Right Chart: Recovery by Playbook (Donut Chart) -->
+              <!-- Right Chart: Illustrative Playbook Mix (Donut Chart) -->
               <div class="card" id="card-recovery-playbook-chart">
                 <div class="card-header">
-                  <div class="card-title">Recovery by Playbook</div>
+                  <div class="card-title">Illustrative Playbook Mix</div>
                 </div>
 
                 <div class="donut-chart-layout">
                   <div class="donut-svg-wrap" id="playbook-donut-wrap">
                     <!-- SVG injected in app.js -->
                     <div class="donut-center-label">
-                      <div class="donut-center-val" id="donut-center-revenue">₹3.8L</div>
-                      <div class="donut-center-sub">Recovered</div>
+                      <div class="donut-center-val" id="donut-center-revenue">Example</div>
+                      <div class="donut-center-sub">Illustrative mix</div>
                     </div>
                   </div>
 
@@ -972,7 +972,7 @@
           <div class="page-header">
             <div>
               <h1 class="page-title">Reports</h1>
-              <p class="page-subtitle">Historical replay evaluation and simulated vs treatment baseline analysis</p>
+              <p class="page-subtitle">Saved batch_report.json snapshot. Offline simulation only; treatment underperformed simulated control.</p>
             </div>
             <button class="btn btn-primary btn-sm" id="btn-export-reports">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -987,23 +987,23 @@
           <div class="kpi-grid">
             <div class="kpi-card">
               <div class="kpi-label">Treatment Resolution Rate</div>
-              <div class="kpi-value" style="color: var(--primary-purple);">26.97%</div>
-              <div class="kpi-trend"><span class="trend-positive">+9.19 pp</span> <span class="trend-context">vs control baseline</span></div>
+              <div class="kpi-value" style="color: var(--primary-purple);">20.22%</div>
+              <div class="kpi-trend"><span class="trend-negative">-10.89 pp</span> <span class="trend-context">vs control baseline</span></div>
             </div>
             <div class="kpi-card">
               <div class="kpi-label">Simulated Control Baseline</div>
-              <div class="kpi-value">17.78%</div>
+              <div class="kpi-value">31.11%</div>
               <div class="kpi-trend"><span class="trend-context">20% holdout cohort</span></div>
             </div>
             <div class="kpi-card">
               <div class="kpi-label">Channel Cost Incurred</div>
-              <div class="kpi-value">₹65.70</div>
-              <div class="kpi-trend"><span class="trend-positive">₹0.37</span> <span class="trend-context">per case avg</span></div>
+              <div class="kpi-value">₹58.70</div>
+              <div class="kpi-trend"><span class="trend-positive">₹0.33</span> <span class="trend-context">per case avg</span></div>
             </div>
             <div class="kpi-card">
-              <div class="kpi-label">Net Recovery ROI</div>
-              <div class="kpi-value" style="color: var(--accent-teal);">1,835.7x</div>
-              <div class="kpi-trend"><span class="trend-positive">100%</span> <span class="trend-context">guardrail compliance</span></div>
+              <div class="kpi-label">Modeled Net Recovery</div>
+              <div class="kpi-value" style="color: var(--accent-teal);">₹91,092.30</div>
+              <div class="kpi-trend"><span>0</span> <span class="trend-context">saved replay violations</span></div>
             </div>
           </div>
         </section>
@@ -1097,4 +1097,4 @@
 
   <script src="/static/app.js"></script>
 </body>
-</html>
+  </html>
