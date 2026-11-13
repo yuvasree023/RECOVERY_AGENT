@@ -8,38 +8,27 @@ Built with **Gemini as the AI Agent Brain** and coupled with **deterministic fai
 
 ---
 
-## 1. Executive Summary & Measured Batch Impact
+## 1. Saved offline replay result
 
-Recover was evaluated in a historical replay simulation across **223 transactions** with a randomized, seeded **20% control group (A/B baseline)**:
+This project is an offline simulation with mock payment and messaging services. It has not demonstrated recovered revenue, positive incremental lift, production safety or commercial ROI in a live deployment.
 
-```
-===========================================================================
-                RECOVER — BATCH REVENUE RECOVERY REPORT
-===========================================================================
- Total Events Processed:        223
- Treatment Cohort:              178 cases (80%)
- Control Cohort (Baseline):     45 cases (20%)
----------------------------------------------------------------------------
- Treatment Resolution Rate:     26.97%
- Control Baseline Rate:         17.78%
- Incremental Recovery Lift:     +9.19% percentage points
----------------------------------------------------------------------------
- Gross Recovered Revenue:       INR 120,669.00
- Total Channel Costs Incurred:  INR 65.70
- NET RECOVERED REVENUE:         INR 120,603.30
- Recovery ROI Multiple:         1,835.7x
- Compliance Violations:         0 (100% Guardrail Compliant)
- Escalation Rate:               0.00%
- Termination Rate:              73.03%
-===========================================================================
-```
+The source of truth for the figures below is the checked-in [`batch_report.json`](batch_report.json), not older screenshots or demo placeholders. This is one saved Python replay artifact; it does not establish that other engines or reruns produce the same result.
 
-### Breakdown by Recovery Playbook
-| Playbook | Description | Primary Mechanisms | Resolution Rate |
-|---|---|---|---|
-| **Payment Failure Recovery** | UPI & Card declines | Intelligent retry scheduling, Smart Payment Links via WhatsApp/SMS/Email | ~25.0% |
-| **Checkout Abandonment** | Cart drop-offs & shipping friction | Basket reminders, inventory reservations, margin-capped discount incentives (≤20%) | ~30.3% |
-| **B2B Overdue Invoices** | Commercial receivables & B2B dunning | Statement reminders, Promise-to-Pay (PTP) commitments, broken PTP tracking, dispute escalation | Automated / Escalated |
+| Saved replay metric | Value |
+|---|---:|
+| Events | 223 |
+| Treatment / simulated control | 178 / 45 |
+| Treatment resolution rate | 20.22% |
+| Control resolution rate | 31.11% |
+| Treatment minus control | -10.89 percentage points |
+| Modeled gross recovery | INR 91,151.00 |
+| Modeled channel costs | INR 58.70 |
+| Modeled net recovery | INR 91,092.30 |
+| Recorded compliance violations | 0 in this replay |
+
+**Interpretation:** treatment underperformed the simulated control in this saved run. Modeled recovery is not incremental revenue. The artifact's `roi_multiple` divides modeled net recovery by channel costs alone, omitting implementation, infrastructure, model and operating costs; it is not a business ROI claim.
+
+The dashboard's batch cards and Reports tab show this saved snapshot. Interactive case replays and `/metrics` describe separate simulated session state and can differ. Decorative trend/playbook charts are labeled illustrative, not evaluation evidence. Prior 30.6%, +4.2 pp, 26.97%, +9.19 pp and INR 120,603.30 headlines are not supported by this saved artifact and have been removed from the result claims.
 
 ---
 
@@ -129,7 +118,7 @@ Recover was evaluated in a historical replay simulation across **223 transaction
 
 ## 4. 9 Deterministic Fail-Closed Guardrails
 
-Guardrails operate with **absolute veto power** over the AI agent brain. No generative output, hallucinated channel, or invalid parameter can bypass validation:
+Guardrails operate with **absolute veto power** over the AI agent brain. Proposed actions are checked against the rules below; completeness and bypass resistance require separate testing:
 
 | Rule | Name | Condition | Action |
 |---|---|---|---|
@@ -145,14 +134,13 @@ Guardrails operate with **absolute veto power** over the AI agent brain. No gene
 
 ---
 
-## 5. Evaluation Methodology & Metrics
+## 5. Evaluation methodology and limits
 
-Recover rigorously separates evaluation metrics into four explicit categories:
-
-1. **Historical Replay**: Replaying actual transaction logs (`data/events.csv`, `data/customers.csv`, `data/outcomes.csv`) through the agent state machine to evaluate autonomous decision quality under real-world conditions.
-2. **Simulated Baseline (Control Group)**: A randomized 20% holdout cohort that receives no active interventions. This measures organic resolution without agent intervention (17.78%).
-3. **Modeled Recovery (Treatment Group)**: The 80% cohort subjected to multi-turn agent interventions, achieving 26.97% resolution.
-4. **Actual Recovery Lift**: True incremental lift calculated as Treatment Resolution Rate minus Control Baseline Rate (**+9.19 percentage points**), generating **₹120,603.30 net recovered revenue** at an ROI multiple of **1,835.7x**.
+- Replay inputs are the repository CSV fixtures (`data/events.csv`, `data/customers.csv`, `data/outcomes.csv`). Dataset provenance is not established here as real customer traffic.
+- The runner assigns treatment and simulated control cohorts and uses mocked interventions/outcomes. This is not a real randomized customer experiment and does not establish causal lift.
+- The saved Python report has 20.22% treatment resolution versus 31.11% simulated control, a -10.89 percentage-point difference. A rerun should be reported with its engine, seed, configuration and saved artifact rather than substituted into this snapshot.
+- Zero recorded violations in one replay is not proof that guardrails are complete or impossible to bypass. Safety needs independent adversarial tests and real integration validation.
+- The Python and TypeScript implementations are separate paths. Their outputs have not been reconciled into one validated benchmark in this cleanup.
 
 ---
 
